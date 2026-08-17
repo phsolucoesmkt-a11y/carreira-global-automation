@@ -10,6 +10,13 @@ import { executarEAmanha, executarAudioNina } from "./flows/enqueteEUA.js";
 import { executar2Horas, executar1Hora, executar10Minutos, executarEstamosAoVivo } from "./flows/contagemRegressiva.js";
 import { executarEHoje, executar14h, executar17h, executar23h } from "./flows/quintaFeira.js";
 import {
+  executarUltimaChance,
+  executarAvisoExtensao,
+  executarContaRapida,
+  executarUltimaMensagem,
+  executarGrupoEncerrado,
+} from "./flows/sextaFeira.js";
+import {
   executar20h10,
   executar20h20,
   executar20h30,
@@ -60,6 +67,11 @@ const FLUXOS = [
   { chave: "durante-live-carrinho-aberto", nome: "Durante a Live — Carrinho aberto", cronPadrao: "54 20 * * 4", executar: () => executarCarrinhoAberto(), defaults: TEXTOS_PADRAO["durante-live-carrinho-aberto"] },
   { chave: "durante-live-garantindo-vaga", nome: "Durante a Live — Já tem gente garantindo vaga", cronPadrao: "3 21 * * 4", executar: () => executarGarantindoVaga(), defaults: TEXTOS_PADRAO["durante-live-garantindo-vaga"] },
   { chave: "23h-fim-do-dia", nome: "Fim do dia (23h)", cronPadrao: "5 23 * * 4", executar: () => executar23h(), defaults: TEXTOS_PADRAO["23h-fim-do-dia"] },
+  { chave: "sexta-ultima-chance", nome: "Sexta — Renomeia 'Última chance'", cronPadrao: "11 10 * * 5", executar: () => executarUltimaChance(), defaults: TEXTOS_PADRAO["sexta-ultima-chance"] },
+  { chave: "sexta-aviso-extensao", nome: "Sexta — Aviso de extensão (manhã)", cronPadrao: "12 10 * * 5", executar: () => executarAvisoExtensao(), defaults: TEXTOS_PADRAO["sexta-aviso-extensao"] },
+  { chave: "sexta-conta-rapida", nome: "Sexta — Conta rápida (tarde)", cronPadrao: "0 15 * * 5", executar: () => executarContaRapida(), defaults: TEXTOS_PADRAO["sexta-conta-rapida"] },
+  { chave: "sexta-ultima-mensagem", nome: "Sexta — Última mensagem (noite)", cronPadrao: "5 19 * * 5", executar: () => executarUltimaMensagem(), defaults: TEXTOS_PADRAO["sexta-ultima-mensagem"] },
+  { chave: "sabado-grupo-encerrado", nome: "Sábado — Grupo encerrado", cronPadrao: "15 8 * * 6", executar: () => executarGrupoEncerrado(), defaults: TEXTOS_PADRAO["sabado-grupo-encerrado"] },
 ];
 
 async function executarFluxo(fluxo, origem) {

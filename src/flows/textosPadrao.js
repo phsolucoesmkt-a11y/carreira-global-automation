@@ -155,6 +155,42 @@ export const TEXTOS_PADRAO = {
       "Não deixa pra depois. Quem tá entrando agora tá saindo na frente.",
   },
 
+  "sexta-ultima-chance": {
+    prefixoNome: "Última chance - Workshop Vagas Internacionais",
+  },
+
+  "sexta-aviso-extensao": {
+    mensagem:
+      "Bom dia! Passando aqui pra avisar uma coisa que não tava nos planos.\n\n" +
+      "Ontem o workshop lotou. Foi muito maior do que a gente esperava e ficamos muito felizes com isso. Só que por conta disso muita gente teve problema pra acessar, a Eduzz engasgou pra alguns na hora do pagamento e o suporte amanheceu cheio de mensagem de gente pedindo pra reabrir.\n\n" +
+      "Conversei com a Nina e ela topou manter as condições do workshop abertas por mais um dia pra essas pessoas.\n\n" +
+      "Então se você tentou comprar ontem e não conseguiu, ou se assistiu e ficou na dúvida e hoje acordou querendo, tá aberto até meia-noite de hoje. Depois disso fecha e não volta. \n\n" +
+      "🔗 Replay: {{replay}}\n👉 Checkout: carreiraglobal.net\n\n\nAproveitem!\n",
+  },
+
+  "sexta-conta-rapida": {
+    mensagem:
+      "Deixa eu te fazer uma conta rápida.\n\n" +
+      "Se você continua ganhando em real o que ganha hoje, daqui a 12 meses vai ter ganho exatamente a mesma coisa.\n\n" +
+      "Talvez um reajuste de 5%, 6% que a inflação come antes de chegar na sua conta.\n\n" +
+      "Agora pensa no cenário oposto: daqui a 4 meses você já pode estar posicionado pra vagas internacionais remotas, ganhando em dólar. Quanto vale essa diferença em 1 ano?\n\n" +
+      "O treinamento custa menos que uma parcela de celular.\n\n" +
+      "A parcela custa menos que uma pizza.\n \n" +
+      "As condições do workshop fecham hoje à meia-noite:\n\n" +
+      "🔗 Replay: {{replay}}\n👉 Checkout: carreiraglobal.net\n",
+  },
+
+  "sexta-ultima-mensagem": {
+    mensagem:
+      "Última mensagem, pessoal.\n\n" +
+      "O link fecha hoje à meia-noite. \nDepois disso fecha e volta pro preço normal, sem os bônus do workshop.\n\n" +
+      "👉 Checkout: carreiraglobal.net\n\nFoi um prazer ter vocês conosco essa semana.",
+  },
+
+  "sabado-grupo-encerrado": {
+    prefixoNome: "Grupo encerrado | Workshop Vagas Internacionais",
+  },
+
   "23h-fim-do-dia": {
     mensagem:
       "Última mensagem desse grupo.\n\n\n" +
