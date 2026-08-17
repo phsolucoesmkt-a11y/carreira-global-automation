@@ -68,7 +68,7 @@
   </div>
 
 <script>
-let state = { view: 'overview', fluxos: [], grupos: [], modelo: null, execucoes: [], me: null, linkDaLive: '', editando: null, editandoCampos: null, editandoCron: '' };
+let state = { view: 'overview', fluxos: [], grupos: [], modelo: null, execucoes: [], me: null, linkDaLive: '', linkReplay: '', editando: null, editandoCampos: null, editandoCron: '' };
 
 async function api(path, opts) {
   const res = await fetch(path, opts);
@@ -100,18 +100,20 @@ async function checarStatus() {
 }
 
 async function carregarTudo() {
-  const [fluxosRes, gruposRes, modeloRes, meRes, linkRes] = await Promise.all([
+  const [fluxosRes, gruposRes, modeloRes, meRes, linkRes, replayRes] = await Promise.all([
     api('/api/fluxos'),
     api('/api/arvore-grupos'),
     api('/api/grupo-modelo'),
     api('/api/me'),
     api('/api/config/link-da-live'),
+    api('/api/config/link-replay'),
   ]);
   state.fluxos = fluxosRes.fluxos;
   state.grupos = gruposRes.grupos;
   state.modelo = modeloRes.modelo;
   state.me = meRes.user;
   state.linkDaLive = linkRes.link;
+  state.linkReplay = replayRes.link;
 }
 
 function renderOverview() {
@@ -170,7 +172,7 @@ function renderEdicaoFluxo(f) {
           <label>Horário (cron: minuto hora * * dia-da-semana, 0=domingo…6=sábado)</label>
           <input type="text" id="f-cron" value="${state.editandoCron}" placeholder="0 20 * * 2" />
         </div>
-        <div class="muted">Use {{link}} no texto onde quiser que apareça o link da live (configurável na aba Configurações).</div>
+        <div class="muted">Use {{link}} pro link da live, ou {{replay}} pro link do replay — ambos configuráveis na aba Configurações.</div>
         <div class="actions">
           <button type="submit">Salvar</button>
           <button type="button" class="secondary" id="btn-cancelar-edicao-fluxo">Cancelar</button>
@@ -212,11 +214,19 @@ function renderConfig() {
     </div>
     <div class="card">
       <form id="form-link-live">
-        <label>Link da live (usado em todas as mensagens de contagem regressiva)</label>
+        <label>Link da live (usado nas mensagens de contagem regressiva de quinta-feira)</label>
         <input type="text" id="f-link-live" value="${state.linkDaLive}" />
         <div><button type="submit">Salvar</button></div>
       </form>
       <div id="link-salvo-msg" class="muted" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <form id="form-link-replay">
+        <label>Link do replay (usado nas mensagens de sexta-feira, pós-workshop)</label>
+        <input type="text" id="f-link-replay" value="${state.linkReplay}" />
+        <div><button type="submit">Salvar</button></div>
+      </form>
+      <div id="replay-salvo-msg" class="muted" style="margin-top:8px"></div>
     </div>
   `;
 }
@@ -395,6 +405,21 @@ function attachHandlers() {
       });
       state.linkDaLive = link;
       document.getElementById('link-salvo-msg').textContent = 'Salvo ✓';
+    });
+  }
+
+  const formLinkReplay = document.getElementById('form-link-replay');
+  if (formLinkReplay) {
+    formLinkReplay.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const link = document.getElementById('f-link-replay').value.trim();
+      await api('/api/config/link-replay', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ link }),
+      });
+      state.linkReplay = link;
+      document.getElementById('replay-salvo-msg').textContent = 'Salvo ✓';
     });
   }
 }

@@ -30,7 +30,7 @@ import { lerModeloCompleto, definirModeloDoGrupo, listarArvoreDeGrupos } from ".
 import { registrarExecucao, listarExecucoes, ultimaExecucaoPorFluxo } from "./services/execucoes.js";
 import { createSessionToken, verifySessionToken, parseCookies } from "./services/session.js";
 import { lerCamposDoFluxo, salvarCamposDoFluxo, lerCronDoFluxo, salvarCronDoFluxo, lerConfiguracao, definirConfiguracao } from "./services/config.js";
-import { LINK_DA_LIVE_PADRAO } from "./services/linkDaLive.js";
+import { LINK_DA_LIVE_PADRAO, LINK_REPLAY_PADRAO } from "./services/linkDaLive.js";
 import { cronParaTexto } from "./services/cronTexto.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -212,6 +212,18 @@ app.put("/api/config/link-da-live", (req, res) => {
   const { link } = req.body ?? {};
   if (!link) return res.status(400).json({ error: "Campo 'link' é obrigatório." });
   definirConfiguracao("link_da_live", link);
+  res.json({ ok: true });
+});
+
+// Link do replay: usado nas mensagens de sexta-feira ({{replay}}).
+app.get("/api/config/link-replay", (_req, res) => {
+  res.json({ link: lerConfiguracao("link_replay", LINK_REPLAY_PADRAO) });
+});
+
+app.put("/api/config/link-replay", (req, res) => {
+  const { link } = req.body ?? {};
+  if (!link) return res.status(400).json({ error: "Campo 'link' é obrigatório." });
+  definirConfiguracao("link_replay", link);
   res.json({ ok: true });
 });
 

@@ -1,10 +1,8 @@
 import { atualizarNomeDoGrupo, enviarTexto } from "../services/evolution.js";
 import { db } from "../db.js";
 import { lerCamposDoFluxo, lerConfiguracao } from "../services/config.js";
-import { LINK_DA_LIVE_PADRAO } from "../services/linkDaLive.js";
+import { LINK_DA_LIVE_PADRAO, LINK_REPLAY_PADRAO } from "../services/linkDaLive.js";
 import { TEXTOS_PADRAO } from "./textosPadrao.js";
-
-const LINK_REPLAY_PADRAO = "https://event.webinarjam.com/n5lzxq/go/live/8wgpzntztps0so";
 
 function gruposAtivos() {
   return db.prepare(`SELECT id, nome FROM arvore_grupos WHERE status = 'Ativo'`).all();
