@@ -32,7 +32,9 @@
   .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; }
   .badge.sucesso, .badge.ativo { background: rgba(52,211,153,0.15); color: var(--ok); }
   .badge.erro { background: rgba(248,113,113,0.15); color: var(--err); }
-  .badge.sem-dados { background: rgba(139,147,163,0.15); color: var(--muted); }
+  .badge.sem-dados, .badge.inativo { background: rgba(139,147,163,0.15); color: var(--muted); }
+  .dia-header { font-size: 13px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.04em; margin: 22px 0 8px; }
+  .dia-header:first-child { margin-top: 0; }
   form { display: flex; flex-direction: column; gap: 10px; }
   input, textarea { background: #0e1117; border: 1px solid var(--border); color: var(--text); padding: 9px 11px; border-radius: 8px; font-size: 13px; font-family: inherit; width: 100%; }
   label { font-size: 12px; color: var(--muted); margin-bottom: 4px; display: block; }
@@ -183,11 +185,12 @@ function renderEdicaoFluxo(f) {
 }
 
 function renderFluxos() {
-  return `
-    <div class="page-header">
-      <div><h1 class="page-title">Fluxos</h1><div class="page-sub">Todos os fluxos automatizados — dispare manualmente ou edite mensagem e horário</div></div>
-    </div>
-    ${state.fluxos.map(f => `
+  let ultimoDia = null;
+  const blocos = state.fluxos.map(f => {
+    const header = f.dia !== ultimoDia ? `<div class="dia-header">${f.dia}</div>` : '';
+    ultimoDia = f.dia;
+    return `
+      ${header}
       <div class="card">
         <div class="row">
           <div>
@@ -203,7 +206,13 @@ function renderFluxos() {
         <div id="resultado-${f.chave}" style="margin-top:10px"></div>
         ${renderEdicaoFluxo(f)}
       </div>
-    `).join('')}
+    `;
+  }).join('');
+  return `
+    <div class="page-header">
+      <div><h1 class="page-title">Fluxos</h1><div class="page-sub">Todos os fluxos automatizados, na ordem em que rodam durante a semana</div></div>
+    </div>
+    ${blocos}
   `;
 }
 
@@ -231,24 +240,42 @@ function renderConfig() {
   `;
 }
 
-function renderGrupos() {
+function renderCardGrupo(g) {
   return `
-    <div class="page-header">
-      <div><h1 class="page-title">Grupos</h1><div class="page-sub">Grupos criados por este sistema</div></div>
-    </div>
-    ${state.grupos.length === 0 ? '<div class="empty">Nenhum grupo criado ainda.</div>' : state.grupos.map(g => `
-      <div class="card">
-        <div class="row">
-          <div>
-            <div style="font-weight:600">${g.nome || g.id}</div>
-            <div class="muted">ID: ${g.id}</div>
-            ${g.link ? `<div class="muted"><a href="${g.link}" target="_blank">${g.link}</a></div>` : '<div class="muted">Sem link registrado</div>'}
-            <div class="muted">Criado em ${fmtData(g.criado_em)}</div>
+    <div class="card">
+      <div class="row">
+        <div>
+          <div style="font-weight:600">${g.nome || g.id}</div>
+          <div class="muted">ID: ${g.id}</div>
+          ${g.link ? `<div class="muted"><a href="${g.link}" target="_blank">${g.link}</a></div>` : '<div class="muted">Sem link registrado</div>'}
+          <div class="muted">Criado em ${fmtData(g.criado_em)}</div>
+          <div class="muted">
+            ${g.participantes != null ? `${g.participantes} participante${g.participantes === 1 ? '' : 's'}` : 'Participantes ainda não conferidos'}
+            ${g.participantes_atualizado_em ? ` · atualizado em ${fmtData(g.participantes_atualizado_em)}` : ''}
           </div>
-          <div>${badge(g.status)}</div>
+        </div>
+        <div style="text-align:right">
+          ${badge(g.status)}
+          <div style="margin-top:8px"><button class="small secondary" data-atualizar-participantes="${g.id}">Atualizar participantes</button></div>
         </div>
       </div>
-    `).join('')}
+    </div>
+  `;
+}
+
+function renderGrupos() {
+  const ativos = state.grupos.filter(g => g.status === 'Ativo');
+  const inativos = state.grupos.filter(g => g.status !== 'Ativo');
+  return `
+    <div class="page-header">
+      <div><h1 class="page-title">Grupos</h1><div class="page-sub">Grupos criados por este sistema — ativos e histórico</div></div>
+    </div>
+    ${state.grupos.length === 0 ? '<div class="empty">Nenhum grupo criado ainda.</div>' : `
+      <div class="dia-header">Ativos (${ativos.length})</div>
+      ${ativos.length === 0 ? '<div class="empty">Nenhum grupo ativo no momento.</div>' : ativos.map(renderCardGrupo).join('')}
+      <div class="dia-header">Inativos / encerrados (${inativos.length})</div>
+      ${inativos.length === 0 ? '<div class="empty">Nenhum grupo inativo ainda.</div>' : inativos.map(renderCardGrupo).join('')}
+    `}
   `;
 }
 
@@ -329,6 +356,23 @@ function attachHandlers() {
         resultadoEl.innerHTML = `<div style="color:var(--err);font-weight:600">Erro: ${e.message}</div>`;
       } finally {
         btn.disabled = false;
+      }
+    });
+  });
+
+  document.querySelectorAll('[data-atualizar-participantes]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.atualizarParticipantes;
+      btn.disabled = true;
+      btn.textContent = 'Consultando…';
+      try {
+        await api(`/api/arvore-grupos/${encodeURIComponent(id)}/atualizar-participantes`, { method: 'POST' });
+        await carregarTudo();
+        render();
+      } catch (e) {
+        alert(`Erro ao atualizar participantes: ${e.message}`);
+        btn.disabled = false;
+        btn.textContent = 'Atualizar participantes';
       }
     });
   });

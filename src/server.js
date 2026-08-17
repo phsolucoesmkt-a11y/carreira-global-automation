@@ -26,7 +26,8 @@ import {
   executarGarantindoVaga,
 } from "./flows/duranteALive.js";
 import { TEXTOS_PADRAO } from "./flows/textosPadrao.js";
-import { lerModeloCompleto, definirModeloDoGrupo, listarArvoreDeGrupos } from "./services/gruposStore.js";
+import { lerModeloCompleto, definirModeloDoGrupo, listarArvoreDeGrupos, buscarGrupoPorId, atualizarParticipantesDoGrupo } from "./services/gruposStore.js";
+import { buscarParticipantesDoGrupo } from "./services/evolution.js";
 import { registrarExecucao, listarExecucoes, ultimaExecucaoPorFluxo } from "./services/execucoes.js";
 import { createSessionToken, verifySessionToken, parseCookies } from "./services/session.js";
 import { lerCamposDoFluxo, salvarCamposDoFluxo, lerCronDoFluxo, salvarCronDoFluxo, lerConfiguracao, definirConfiguracao } from "./services/config.js";
@@ -48,30 +49,30 @@ const COOKIE_NAME = "cga_session";
 // mesma lista. `defaults` é null pro "criar-grupo" porque ele não manda
 // mensagem própria — usa o molde do grupo (aba Editar > Molde).
 const FLUXOS = [
-  { chave: "criar-grupo", nome: "Criar o Grupo", cronPadrao: "50 18 * * 1", executar: () => executarCriarGrupo({}), defaults: null },
-  { chave: "seja-bem-vindo", nome: "Seja Bem Vindo", cronPadrao: "0 20 * * 2", executar: () => executarSejaBemVindo(), defaults: TEXTOS_PADRAO["seja-bem-vindo"] },
-  { chave: "e-amanha", nome: "É Amanhã (enquete EUA)", cronPadrao: "0 11 * * 3", executar: () => executarEAmanha(), defaults: TEXTOS_PADRAO["e-amanha"] },
-  { chave: "audio-nina", nome: "Áudio da Nina", cronPadrao: "0 18 * * 3", executar: () => executarAudioNina(), defaults: TEXTOS_PADRAO["audio-nina"] },
-  { chave: "2-horas", nome: "Faltam 2 horas", cronPadrao: "0 18 * * 4", executar: () => executar2Horas(), defaults: TEXTOS_PADRAO["2-horas"] },
-  { chave: "1-hora", nome: "Falta 1 hora", cronPadrao: "0 19 * * 4", executar: () => executar1Hora(), defaults: TEXTOS_PADRAO["1-hora"] },
-  { chave: "10-minutos", nome: "Faltam 10 minutos", cronPadrao: "50 19 * * 4", executar: () => executar10Minutos(), defaults: TEXTOS_PADRAO["10-minutos"] },
-  { chave: "estamos-ao-vivo", nome: "Estamos ao vivo", cronPadrao: "1 20 * * 4", executar: () => executarEstamosAoVivo(), defaults: TEXTOS_PADRAO["estamos-ao-vivo"] },
-  { chave: "e-hoje", nome: "É Hoje", cronPadrao: "0 11 * * 4", executar: () => executarEHoje(), defaults: TEXTOS_PADRAO["e-hoje"] },
-  { chave: "14h", nome: "Mensagem das 14h", cronPadrao: "0 14 * * 4", executar: () => executar14h(), defaults: TEXTOS_PADRAO["14h"] },
-  { chave: "17h", nome: "Mensagem das 17h", cronPadrao: "0 17 * * 4", executar: () => executar17h(), defaults: TEXTOS_PADRAO["17h"] },
-  { chave: "durante-live-20h10", nome: "Durante a Live — 20h10", cronPadrao: "12 20 * * 4", executar: () => executar20h10(), defaults: TEXTOS_PADRAO["durante-live-20h10"] },
-  { chave: "durante-live-20h20", nome: "Durante a Live — 20h20", cronPadrao: "22 20 * * 4", executar: () => executar20h20(), defaults: TEXTOS_PADRAO["durante-live-20h20"] },
-  { chave: "durante-live-20h30", nome: "Durante a Live — 20h30", cronPadrao: "30 20 * * 4", executar: () => executar20h30(), defaults: TEXTOS_PADRAO["durante-live-20h30"] },
-  { chave: "durante-live-20h40", nome: "Durante a Live — 20h40", cronPadrao: "40 20 * * 4", executar: () => executar20h40(), defaults: TEXTOS_PADRAO["durante-live-20h40"] },
-  { chave: "durante-live-20h50", nome: "Durante a Live — 20h50", cronPadrao: "50 20 * * 4", executar: () => executar20h50(), defaults: TEXTOS_PADRAO["durante-live-20h50"] },
-  { chave: "durante-live-carrinho-aberto", nome: "Durante a Live — Carrinho aberto", cronPadrao: "54 20 * * 4", executar: () => executarCarrinhoAberto(), defaults: TEXTOS_PADRAO["durante-live-carrinho-aberto"] },
-  { chave: "durante-live-garantindo-vaga", nome: "Durante a Live — Já tem gente garantindo vaga", cronPadrao: "3 21 * * 4", executar: () => executarGarantindoVaga(), defaults: TEXTOS_PADRAO["durante-live-garantindo-vaga"] },
-  { chave: "23h-fim-do-dia", nome: "Fim do dia (23h)", cronPadrao: "5 23 * * 4", executar: () => executar23h(), defaults: TEXTOS_PADRAO["23h-fim-do-dia"] },
-  { chave: "sexta-ultima-chance", nome: "Sexta — Renomeia 'Última chance'", cronPadrao: "11 10 * * 5", executar: () => executarUltimaChance(), defaults: TEXTOS_PADRAO["sexta-ultima-chance"] },
-  { chave: "sexta-aviso-extensao", nome: "Sexta — Aviso de extensão (manhã)", cronPadrao: "12 10 * * 5", executar: () => executarAvisoExtensao(), defaults: TEXTOS_PADRAO["sexta-aviso-extensao"] },
-  { chave: "sexta-conta-rapida", nome: "Sexta — Conta rápida (tarde)", cronPadrao: "0 15 * * 5", executar: () => executarContaRapida(), defaults: TEXTOS_PADRAO["sexta-conta-rapida"] },
-  { chave: "sexta-ultima-mensagem", nome: "Sexta — Última mensagem (noite)", cronPadrao: "5 19 * * 5", executar: () => executarUltimaMensagem(), defaults: TEXTOS_PADRAO["sexta-ultima-mensagem"] },
-  { chave: "sabado-grupo-encerrado", nome: "Sábado — Grupo encerrado", cronPadrao: "15 8 * * 6", executar: () => executarGrupoEncerrado(), defaults: TEXTOS_PADRAO["sabado-grupo-encerrado"] },
+  { chave: "criar-grupo", nome: "Criar o Grupo", dia: "Segunda-feira", cronPadrao: "50 18 * * 1", executar: () => executarCriarGrupo({}), defaults: null },
+  { chave: "seja-bem-vindo", nome: "Seja Bem Vindo", dia: "Terça-feira", cronPadrao: "0 20 * * 2", executar: () => executarSejaBemVindo(), defaults: TEXTOS_PADRAO["seja-bem-vindo"] },
+  { chave: "e-amanha", nome: "É Amanhã (enquete EUA)", dia: "Quarta-feira", cronPadrao: "0 11 * * 3", executar: () => executarEAmanha(), defaults: TEXTOS_PADRAO["e-amanha"] },
+  { chave: "audio-nina", nome: "Áudio da Nina", dia: "Quarta-feira", cronPadrao: "0 18 * * 3", executar: () => executarAudioNina(), defaults: TEXTOS_PADRAO["audio-nina"] },
+  { chave: "2-horas", nome: "Faltam 2 horas", dia: "Quinta-feira", cronPadrao: "0 18 * * 4", executar: () => executar2Horas(), defaults: TEXTOS_PADRAO["2-horas"] },
+  { chave: "1-hora", nome: "Falta 1 hora", dia: "Quinta-feira", cronPadrao: "0 19 * * 4", executar: () => executar1Hora(), defaults: TEXTOS_PADRAO["1-hora"] },
+  { chave: "10-minutos", nome: "Faltam 10 minutos", dia: "Quinta-feira", cronPadrao: "50 19 * * 4", executar: () => executar10Minutos(), defaults: TEXTOS_PADRAO["10-minutos"] },
+  { chave: "estamos-ao-vivo", nome: "Estamos ao vivo", dia: "Quinta-feira", cronPadrao: "1 20 * * 4", executar: () => executarEstamosAoVivo(), defaults: TEXTOS_PADRAO["estamos-ao-vivo"] },
+  { chave: "e-hoje", nome: "É Hoje", dia: "Quinta-feira", cronPadrao: "0 11 * * 4", executar: () => executarEHoje(), defaults: TEXTOS_PADRAO["e-hoje"] },
+  { chave: "14h", nome: "Mensagem das 14h", dia: "Quinta-feira", cronPadrao: "0 14 * * 4", executar: () => executar14h(), defaults: TEXTOS_PADRAO["14h"] },
+  { chave: "17h", nome: "Mensagem das 17h", dia: "Quinta-feira", cronPadrao: "0 17 * * 4", executar: () => executar17h(), defaults: TEXTOS_PADRAO["17h"] },
+  { chave: "durante-live-20h10", nome: "Durante a Live — 20h10", dia: "Quinta-feira", cronPadrao: "12 20 * * 4", executar: () => executar20h10(), defaults: TEXTOS_PADRAO["durante-live-20h10"] },
+  { chave: "durante-live-20h20", nome: "Durante a Live — 20h20", dia: "Quinta-feira", cronPadrao: "22 20 * * 4", executar: () => executar20h20(), defaults: TEXTOS_PADRAO["durante-live-20h20"] },
+  { chave: "durante-live-20h30", nome: "Durante a Live — 20h30", dia: "Quinta-feira", cronPadrao: "30 20 * * 4", executar: () => executar20h30(), defaults: TEXTOS_PADRAO["durante-live-20h30"] },
+  { chave: "durante-live-20h40", nome: "Durante a Live — 20h40", dia: "Quinta-feira", cronPadrao: "40 20 * * 4", executar: () => executar20h40(), defaults: TEXTOS_PADRAO["durante-live-20h40"] },
+  { chave: "durante-live-20h50", nome: "Durante a Live — 20h50", dia: "Quinta-feira", cronPadrao: "50 20 * * 4", executar: () => executar20h50(), defaults: TEXTOS_PADRAO["durante-live-20h50"] },
+  { chave: "durante-live-carrinho-aberto", nome: "Durante a Live — Carrinho aberto", dia: "Quinta-feira", cronPadrao: "54 20 * * 4", executar: () => executarCarrinhoAberto(), defaults: TEXTOS_PADRAO["durante-live-carrinho-aberto"] },
+  { chave: "durante-live-garantindo-vaga", nome: "Durante a Live — Já tem gente garantindo vaga", dia: "Quinta-feira", cronPadrao: "3 21 * * 4", executar: () => executarGarantindoVaga(), defaults: TEXTOS_PADRAO["durante-live-garantindo-vaga"] },
+  { chave: "23h-fim-do-dia", nome: "Fim do dia (23h)", dia: "Quinta-feira", cronPadrao: "5 23 * * 4", executar: () => executar23h(), defaults: TEXTOS_PADRAO["23h-fim-do-dia"] },
+  { chave: "sexta-ultima-chance", nome: "Sexta — Renomeia 'Última chance'", dia: "Sexta-feira", cronPadrao: "11 10 * * 5", executar: () => executarUltimaChance(), defaults: TEXTOS_PADRAO["sexta-ultima-chance"] },
+  { chave: "sexta-aviso-extensao", nome: "Sexta — Aviso de extensão (manhã)", dia: "Sexta-feira", cronPadrao: "12 10 * * 5", executar: () => executarAvisoExtensao(), defaults: TEXTOS_PADRAO["sexta-aviso-extensao"] },
+  { chave: "sexta-conta-rapida", nome: "Sexta — Conta rápida (tarde)", dia: "Sexta-feira", cronPadrao: "0 15 * * 5", executar: () => executarContaRapida(), defaults: TEXTOS_PADRAO["sexta-conta-rapida"] },
+  { chave: "sexta-ultima-mensagem", nome: "Sexta — Última mensagem (noite)", dia: "Sexta-feira", cronPadrao: "5 19 * * 5", executar: () => executarUltimaMensagem(), defaults: TEXTOS_PADRAO["sexta-ultima-mensagem"] },
+  { chave: "sabado-grupo-encerrado", nome: "Sábado — Grupo encerrado", dia: "Sábado", cronPadrao: "15 8 * * 6", executar: () => executarGrupoEncerrado(), defaults: TEXTOS_PADRAO["sabado-grupo-encerrado"] },
 ];
 
 async function executarFluxo(fluxo, origem) {
@@ -160,6 +161,7 @@ app.get("/api/fluxos", (_req, res) => {
     return {
       chave: f.chave,
       nome: f.nome,
+      dia: f.dia,
       quando: cronParaTexto(cronAtual),
       editavel: f.defaults !== null,
       ultimaExecucao: ultimaExecucaoPorFluxo(f.chave) ?? null,
@@ -225,6 +227,21 @@ app.put("/api/config/link-replay", (req, res) => {
   if (!link) return res.status(400).json({ error: "Campo 'link' é obrigatório." });
   definirConfiguracao("link_replay", link);
   res.json({ ok: true });
+});
+
+// Consulta a Evolution API na hora e atualiza a contagem de participantes
+// guardada pra esse grupo (sob demanda — nenhum fluxo automático chama isso
+// pros grupos ainda ativos, só o de sábado quando o grupo é encerrado).
+app.post("/api/arvore-grupos/:id/atualizar-participantes", async (req, res) => {
+  const grupo = buscarGrupoPorId(req.params.id);
+  if (!grupo) return res.status(404).json({ error: "Grupo não encontrado." });
+  try {
+    const participantes = await buscarParticipantesDoGrupo({ groupJid: grupo.id });
+    atualizarParticipantesDoGrupo(grupo.id, participantes.length);
+    res.json({ ok: true, participantes: participantes.length });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
 });
 
 app.get("/api/execucoes", (req, res) => {

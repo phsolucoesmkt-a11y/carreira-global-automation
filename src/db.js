@@ -70,3 +70,9 @@ const colunas = db.prepare(`PRAGMA table_info(arvore_grupos)`).all();
 if (!colunas.some((c) => c.name === "link")) {
   db.exec(`ALTER TABLE arvore_grupos ADD COLUMN link TEXT`);
 }
+if (!colunas.some((c) => c.name === "participantes")) {
+  db.exec(`ALTER TABLE arvore_grupos ADD COLUMN participantes INTEGER`);
+}
+if (!colunas.some((c) => c.name === "participantes_atualizado_em")) {
+  db.exec(`ALTER TABLE arvore_grupos ADD COLUMN participantes_atualizado_em TEXT`);
+}

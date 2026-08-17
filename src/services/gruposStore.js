@@ -49,3 +49,23 @@ export function adicionarNaArvoreDeGrupos({ groupId, nome, link }) {
 export function listarArvoreDeGrupos() {
   return db.prepare(`SELECT * FROM arvore_grupos ORDER BY criado_em DESC`).all();
 }
+
+export function buscarGrupoPorId(id) {
+  return db.prepare(`SELECT * FROM arvore_grupos WHERE id = ?`).get(id) ?? null;
+}
+
+// Guarda a contagem de participantes mais recente (consultada na Evolution
+// API sob demanda, não fica preso a nenhum fluxo automático).
+export function atualizarParticipantesDoGrupo(id, total) {
+  db.prepare(
+    `UPDATE arvore_grupos SET participantes = ?, participantes_atualizado_em = datetime('now') WHERE id = ?`
+  ).run(total, id);
+}
+
+// Marca o grupo como Inativo (ex.: quando o fluxo de sábado encerra o
+// grupo) — mantém o registro na árvore pra histórico, só muda o status.
+export function marcarGrupoInativo(id) {
+  db.prepare(
+    `UPDATE arvore_grupos SET status = 'Inativo', atualizado_em = datetime('now') WHERE id = ?`
+  ).run(id);
+}

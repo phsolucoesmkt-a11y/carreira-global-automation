@@ -110,6 +110,13 @@ export async function atualizarNomeDoGrupo({ groupJid, nome }) {
   });
 }
 
+// Busca a lista de participantes de um grupo — usado pra guardar quantas
+// pessoas ficaram no grupo (histórico), não tem equivalente no n8n original.
+export async function buscarParticipantesDoGrupo({ groupJid }) {
+  const body = await call(`/group/participants/${INSTANCE}?groupJid=${encodeURIComponent(groupJid)}`);
+  return body.participants ?? [];
+}
+
 // Espelha "Enviar audio".
 export async function enviarAudio({ remoteJid, audioUrl }) {
   return call(`/message/sendMedia/${INSTANCE}`, {
