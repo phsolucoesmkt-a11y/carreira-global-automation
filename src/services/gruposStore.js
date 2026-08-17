@@ -1,0 +1,51 @@
+import { db } from "../db.js";
+
+// Lê o molde do grupo (equivalente a ler a Página1 da planilha).
+export function lerModeloDoGrupo() {
+  const row = db.prepare(`SELECT * FROM grupo_modelo WHERE id = 1`).get();
+  if (!row) throw new Error("Molde do grupo ainda não configurado (tabela grupo_modelo vazia).");
+  return {
+    nome: row.nome,
+    imagem: row.imagem_url,
+    descricao: row.descricao,
+    audio: row.audio_url,
+  };
+}
+
+// Igual lerModeloDoGrupo, mas traz tudo (inclusive o resultado da última
+// criação) — usado pra exibir na tela.
+export function lerModeloCompleto() {
+  return db.prepare(`SELECT * FROM grupo_modelo WHERE id = 1`).get() ?? null;
+}
+
+// Cria ou substitui o molde por completo (nome/imagem/descrição/áudio).
+export function definirModeloDoGrupo({ nome, imagemUrl, descricao, audioUrl }) {
+  db.prepare(
+    `INSERT INTO grupo_modelo (id, nome, imagem_url, descricao, audio_url)
+     VALUES (1, ?, ?, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET
+       nome = excluded.nome, imagem_url = excluded.imagem_url,
+       descricao = excluded.descricao, audio_url = excluded.audio_url,
+       atualizado_em = datetime('now')`
+  ).run(nome, imagemUrl ?? null, descricao ?? null, audioUrl ?? null);
+}
+
+// Espelha "atualizo a coluna link do grupo e o id do grupo": só esses dois
+// campos mudam a cada criação, o resto do molde continua igual.
+export function gravarResultadoNoModelo({ groupId, inviteUrl }) {
+  db.prepare(
+    `UPDATE grupo_modelo SET ultimo_group_id = ?, ultimo_invite_url = ?, atualizado_em = datetime('now') WHERE id = 1`
+  ).run(groupId, inviteUrl);
+}
+
+// Substitui "Adiciona na árvore dos Grupos".
+export function adicionarNaArvoreDeGrupos({ groupId, nome, link }) {
+  db.prepare(
+    `INSERT INTO arvore_grupos (id, nome, link, status) VALUES (?, ?, ?, 'Ativo')
+     ON CONFLICT(id) DO UPDATE SET status = 'Ativo', nome = excluded.nome, link = excluded.link, atualizado_em = datetime('now')`
+  ).run(groupId, nome, link ?? null);
+}
+
+export function listarArvoreDeGrupos() {
+  return db.prepare(`SELECT * FROM arvore_grupos ORDER BY criado_em DESC`).all();
+}

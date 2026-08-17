@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Carreira Global — Automação</title>
+<style>
+  :root {
+    --bg: #0b0d12; --card: #12151c; --border: #232733; --text: #e7e9ee; --muted: #8b93a3;
+    --accent: #818cf8; --accent-dim: rgba(129,140,248,0.15); --ok: #34d399; --err: #f87171;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  .app { display: flex; min-height: 100vh; }
+  nav { width: 220px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 20px 14px; display: flex; flex-direction: column; }
+  nav .brand { font-weight: 700; font-size: 16px; margin-bottom: 2px; }
+  nav .brand-sub { color: var(--muted); font-size: 11.5px; margin-bottom: 22px; }
+  .navitem { padding: 9px 12px; border-radius: 8px; font-size: 13.5px; cursor: pointer; color: var(--muted); margin-bottom: 2px; }
+  .navitem:hover { background: rgba(255,255,255,0.04); }
+  .navitem.active { background: var(--accent-dim); color: var(--accent); font-weight: 600; }
+  main { flex: 1; padding: 28px 32px; max-width: 900px; }
+  .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
+  .page-title { font-size: 21px; margin: 0 0 3px; }
+  .page-sub { color: var(--muted); font-size: 13px; }
+  .status { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); }
+  .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--muted); }
+  .dot.on { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+  .dot.off { background: var(--err); }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+  .row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .muted { color: var(--muted); font-size: 12px; }
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .badge.sucesso, .badge.ativo { background: rgba(52,211,153,0.15); color: var(--ok); }
+  .badge.erro { background: rgba(248,113,113,0.15); color: var(--err); }
+  .badge.sem-dados { background: rgba(139,147,163,0.15); color: var(--muted); }
+  form { display: flex; flex-direction: column; gap: 10px; }
+  input, textarea { background: #0e1117; border: 1px solid var(--border); color: var(--text); padding: 9px 11px; border-radius: 8px; font-size: 13px; font-family: inherit; width: 100%; }
+  label { font-size: 12px; color: var(--muted); margin-bottom: 4px; display: block; }
+  button { background: var(--accent); color: #0b0d12; border: none; padding: 9px 15px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; }
+  button.secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  button.small { padding: 6px 12px; font-size: 12.5px; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .empty { color: var(--muted); font-size: 13px; padding: 12px 0; }
+  pre { background: #0e1117; border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 12px; overflow-x: auto; white-space: pre-wrap; }
+  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+  .stat-value { font-size: 22px; font-weight: 700; margin-top: 4px; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+  <div class="app">
+    <nav>
+      <div class="brand">Carreira Global</div>
+      <div class="brand-sub">Automação</div>
+      <div class="navitem" data-view="overview">◆ Visão Geral</div>
+      <div class="navitem" data-view="fluxos">▤ Fluxos</div>
+      <div class="navitem" data-view="grupos">◎ Grupos</div>
+      <div class="navitem" data-view="editar">✎ Editar</div>
+      <div class="navitem" data-view="config">🔗 Configurações</div>
+      <div class="navitem" data-view="usuarios">⚙ Usuários</div>
+      <div style="flex:1"></div>
+      <div class="status" style="margin-bottom:12px"><span id="dot" class="dot"></span><span id="status-text">verificando…</span></div>
+      <button class="secondary small" id="btn-sair">Sair</button>
+    </nav>
+    <main id="main"></main>
+  </div>
+
+<script>
+let state = { view: 'overview', fluxos: [], grupos: [], modelo: null, execucoes: [], me: null, linkDaLive: '', editando: null, editandoCampos: null, editandoCron: '' };
+
+async function api(path, opts) {
+  const res = await fetch(path, opts);
+  if (res.status === 401) { window.location.href = '/login.html'; throw new Error('não autenticado'); }
+  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || res.statusText);
+  return res.json();
+}
+
+function badge(status) {
+  const cls = status === 'Ativo' ? 'ativo' : status === 'sucesso' ? 'sucesso' : status === 'erro' ? 'erro' : 'sem-dados';
+  return `<span class="badge ${cls}">${status}</span>`;
+}
+
+function fmtData(iso) {
+  return iso ? new Date(iso.replace(' ', 'T') + 'Z').toLocaleString('pt-BR') : '—';
+}
+
+async function checarStatus() {
+  const dot = document.getElementById('dot');
+  const text = document.getElementById('status-text');
+  try {
+    await api('/api/health');
+    dot.className = 'dot on';
+    text.textContent = 'Sistema ativo';
+  } catch {
+    dot.className = 'dot off';
+    text.textContent = 'Sistema fora do ar';
+  }
+}
+
+async function carregarTudo() {
+  const [fluxosRes, gruposRes, modeloRes, meRes, linkRes] = await Promise.all([
+    api('/api/fluxos'),
+    api('/api/arvore-grupos'),
+    api('/api/grupo-modelo'),
+    api('/api/me'),
+    api('/api/config/link-da-live'),
+  ]);
+  state.fluxos = fluxosRes.fluxos;
+  state.grupos = gruposRes.grupos;
+  state.modelo = modeloRes.modelo;
+  state.me = meRes.user;
+  state.linkDaLive = linkRes.link;
+}
+
+function renderOverview() {
+  const gruposAtivos = state.grupos.filter(g => g.status === 'Ativo').length;
+  const ultimasExecucoes = state.fluxos.filter(f => f.ultimaExecucao).length;
+  return `
+    <div class="page-header">
+      <div><h1 class="page-title">Visão Geral</h1><div class="page-sub">Resumo do sistema de automação</div></div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">Fluxos configurados</div><div class="stat-value">${state.fluxos.length}</div></div>
+      <div class="stat-card"><div class="stat-label">Grupos ativos</div><div class="stat-value">${gruposAtivos}</div></div>
+      <div class="stat-card"><div class="stat-label">Fluxos já executados</div><div class="stat-value">${ultimasExecucoes}</div></div>
+    </div>
+    <h3 style="margin:0 0 12px">Próximas execuções automáticas</h3>
+    ${state.fluxos.map(f => `
+      <div class="card row">
+        <div>
+          <div style="font-weight:600">${f.nome}</div>
+          <div class="muted">${f.quando}</div>
+        </div>
+        <div>${f.ultimaExecucao ? badge(f.ultimaExecucao.status) : badge('sem-dados')}</div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function campoLabel(chave) {
+  const nomes = {
+    videoUrl: 'URL do vídeo', texto: 'Texto da mensagem', mensagem: 'Texto da mensagem',
+    pergunta: 'Pergunta', avisoTexto: 'Texto do aviso', prefixoNome: 'Novo nome do grupo (prefixo)',
+    enquetePergunta: 'Pergunta da enquete', enqueteOpcoes: 'Opções da enquete (uma por linha)',
+  };
+  return nomes[chave] || chave;
+}
+
+function renderCampoInput(chave, valor) {
+  const label = campoLabel(chave);
+  if (Array.isArray(valor)) {
+    return `<div><label>${label}</label><textarea rows="4" data-campo="${chave}" data-tipo="lista">${valor.join('\n')}</textarea></div>`;
+  }
+  if (typeof valor === 'string' && (valor.length > 60 || valor.includes('\n'))) {
+    return `<div><label>${label}</label><textarea rows="5" data-campo="${chave}">${valor}</textarea></div>`;
+  }
+  return `<div><label>${label}</label><input type="text" data-campo="${chave}" value="${(valor ?? '').toString().replace(/"/g, '&quot;')}" /></div>`;
+}
+
+function renderEdicaoFluxo(f) {
+  if (state.editando !== f.chave) return '';
+  const campos = state.editandoCampos || {};
+  return `
+    <div class="card" style="margin-top:10px;border-color:var(--accent)">
+      <form id="form-editar-fluxo" data-chave="${f.chave}">
+        ${Object.entries(campos).map(([k, v]) => renderCampoInput(k, v)).join('')}
+        <div>
+          <label>Horário (cron: minuto hora * * dia-da-semana, 0=domingo…6=sábado)</label>
+          <input type="text" id="f-cron" value="${state.editandoCron}" placeholder="0 20 * * 2" />
+        </div>
+        <div class="muted">Use {{link}} no texto onde quiser que apareça o link da live (configurável na aba Configurações).</div>
+        <div class="actions">
+          <button type="submit">Salvar</button>
+          <button type="button" class="secondary" id="btn-cancelar-edicao-fluxo">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  `;
+}
+
+function renderFluxos() {
+  return `
+    <div class="page-header">
+      <div><h1 class="page-title">Fluxos</h1><div class="page-sub">Todos os fluxos automatizados — dispare manualmente ou edite mensagem e horário</div></div>
+    </div>
+    ${state.fluxos.map(f => `
+      <div class="card">
+        <div class="row">
+          <div>
+            <div style="font-weight:600">${f.nome}</div>
+            <div class="muted">Automático: ${f.quando}</div>
+            ${f.ultimaExecucao ? `<div class="muted" style="margin-top:4px">Última execução (${f.ultimaExecucao.origem}): ${fmtData(f.ultimaExecucao.executado_em)} ${badge(f.ultimaExecucao.status)}</div>` : '<div class="muted" style="margin-top:4px">Nunca executado</div>'}
+          </div>
+          <div class="actions">
+            ${f.editavel ? `<button class="small secondary" data-editar="${f.chave}">Editar</button>` : ''}
+            <button class="small" data-executar="${f.chave}">Executar agora</button>
+          </div>
+        </div>
+        <div id="resultado-${f.chave}" style="margin-top:10px"></div>
+        ${renderEdicaoFluxo(f)}
+      </div>
+    `).join('')}
+  `;
+}
+
+function renderConfig() {
+  return `
+    <div class="page-header">
+      <div><h1 class="page-title">Configurações</h1><div class="page-sub">Valores compartilhados entre fluxos</div></div>
+    </div>
+    <div class="card">
+      <form id="form-link-live">
+        <label>Link da live (usado em todas as mensagens de contagem regressiva)</label>
+        <input type="text" id="f-link-live" value="${state.linkDaLive}" />
+        <div><button type="submit">Salvar</button></div>
+      </form>
+      <div id="link-salvo-msg" class="muted" style="margin-top:8px"></div>
+    </div>
+  `;
+}
+
+function renderGrupos() {
+  return `
+    <div class="page-header">
+      <div><h1 class="page-title">Grupos</h1><div class="page-sub">Grupos criados por este sistema</div></div>
+    </div>
+    ${state.grupos.length === 0 ? '<div class="empty">Nenhum grupo criado ainda.</div>' : state.grupos.map(g => `
+      <div class="card">
+        <div class="row">
+          <div>
+            <div style="font-weight:600">${g.nome || g.id}</div>
+            <div class="muted">ID: ${g.id}</div>
+            ${g.link ? `<div class="muted"><a href="${g.link}" target="_blank">${g.link}</a></div>` : '<div class="muted">Sem link registrado</div>'}
+            <div class="muted">Criado em ${fmtData(g.criado_em)}</div>
+          </div>
+          <div>${badge(g.status)}</div>
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function renderEditar() {
+  const m = state.modelo;
+  return `
+    <div class="page-header">
+      <div><h1 class="page-title">Editar molde do grupo</h1><div class="page-sub">Nome, imagem e descrição reaproveitados toda semana pelo fluxo "Criar o Grupo"</div></div>
+    </div>
+    <div class="card">
+      <form id="form-modelo">
+        <div>
+          <label>Nome do grupo</label>
+          <input type="text" id="f-nome" required value="${m?.nome ?? ''}" />
+        </div>
+        <div>
+          <label>Descrição</label>
+          <textarea id="f-descricao" rows="3">${m?.descricao ?? ''}</textarea>
+        </div>
+        <div>
+          <label>URL da imagem (Google Drive)</label>
+          <input type="text" id="f-imagem" value="${m?.imagem_url ?? ''}" />
+        </div>
+        <div>
+          <label>Áudio Nina (Google Drive)</label>
+          <input type="text" id="f-audio" value="${m?.audio_url ?? ''}" />
+        </div>
+        <div><button type="submit">Salvar</button></div>
+      </form>
+      <div class="muted" style="margin-top:12px">
+        ${m?.ultimo_group_id ? `Último grupo criado: ${m.ultimo_group_id}${m.ultimo_invite_url ? ` · <a href="${m.ultimo_invite_url}" target="_blank">${m.ultimo_invite_url}</a>` : ''}` : 'Nenhum grupo criado a partir deste molde ainda.'}
+      </div>
+      <div id="salvo-msg" class="muted" style="margin-top:8px"></div>
+    </div>
+  `;
+}
+
+function renderUsuarios() {
+  return `
+    <div class="page-header">
+      <div><h1 class="page-title">Usuários</h1><div class="page-sub">Acesso ao sistema</div></div>
+    </div>
+    <div class="card">
+      <div class="muted">Usuário logado</div>
+      <div style="font-weight:600;margin-top:4px">${state.me || '—'}</div>
+    </div>
+    <div class="card">
+      <div class="muted">Este sistema hoje tem um único usuário administrador (login/senha configurados no servidor). Pra trocar a senha ou adicionar outro usuário, é preciso mexer nas variáveis de ambiente do servidor.</div>
+    </div>
+  `;
+}
+
+function render() {
+  document.querySelectorAll('.navitem').forEach(el => el.classList.toggle('active', el.dataset.view === state.view));
+  const main = document.getElementById('main');
+  if (state.view === 'overview') main.innerHTML = renderOverview();
+  else if (state.view === 'fluxos') main.innerHTML = renderFluxos();
+  else if (state.view === 'grupos') main.innerHTML = renderGrupos();
+  else if (state.view === 'editar') main.innerHTML = renderEditar();
+  else if (state.view === 'config') main.innerHTML = renderConfig();
+  else if (state.view === 'usuarios') main.innerHTML = renderUsuarios();
+  attachHandlers();
+}
+
+function attachHandlers() {
+  document.querySelectorAll('[data-executar]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const chave = btn.dataset.executar;
+      if (!confirm(`Isso vai executar "${chave}" de verdade agora. Confirma?`)) return;
+      btn.disabled = true;
+      const resultadoEl = document.getElementById(`resultado-${chave}`);
+      resultadoEl.innerHTML = '<div class="muted">Executando…</div>';
+      try {
+        const r = await api(`/api/fluxos/${chave}/executar`, { method: 'POST' });
+        resultadoEl.innerHTML = `<div style="color:var(--ok);font-weight:600;margin-bottom:6px">Executado com sucesso ✓</div><pre>${JSON.stringify(r, null, 2)}</pre>`;
+        await carregarTudo();
+      } catch (e) {
+        resultadoEl.innerHTML = `<div style="color:var(--err);font-weight:600">Erro: ${e.message}</div>`;
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  });
+
+  const formModelo = document.getElementById('form-modelo');
+  if (formModelo) {
+    formModelo.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nome = document.getElementById('f-nome').value.trim();
+      const descricao = document.getElementById('f-descricao').value.trim();
+      const imagemUrl = document.getElementById('f-imagem').value.trim();
+      const audioUrl = document.getElementById('f-audio').value.trim();
+      await api('/api/grupo-modelo', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, descricao, imagemUrl, audioUrl }),
+      });
+      await carregarTudo();
+      document.getElementById('salvo-msg').textContent = 'Salvo ✓';
+    });
+  }
+
+  document.querySelectorAll('[data-editar]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const chave = btn.dataset.editar;
+      const { campos, cron } = await api(`/api/fluxos/${chave}/editar`);
+      state.editando = chave;
+      state.editandoCampos = campos;
+      state.editandoCron = cron;
+      render();
+    });
+  });
+
+  const btnCancelarEdicaoFluxo = document.getElementById('btn-cancelar-edicao-fluxo');
+  if (btnCancelarEdicaoFluxo) {
+    btnCancelarEdicaoFluxo.addEventListener('click', () => {
+      state.editando = null;
+      render();
+    });
+  }
+
+  const formEditarFluxo = document.getElementById('form-editar-fluxo');
+  if (formEditarFluxo) {
+    formEditarFluxo.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const chave = formEditarFluxo.dataset.chave;
+      const campos = {};
+      formEditarFluxo.querySelectorAll('[data-campo]').forEach(el => {
+        campos[el.dataset.campo] = el.dataset.tipo === 'lista'
+          ? el.value.split('\n').map(s => s.trim()).filter(Boolean)
+          : el.value;
+      });
+      const cron = document.getElementById('f-cron').value.trim();
+      await api(`/api/fluxos/${chave}/editar`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ campos, cron }),
+      });
+      state.editando = null;
+      await carregarTudo();
+      render();
+    });
+  }
+
+  const formLinkLive = document.getElementById('form-link-live');
+  if (formLinkLive) {
+    formLinkLive.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const link = document.getElementById('f-link-live').value.trim();
+      await api('/api/config/link-da-live', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ link }),
+      });
+      state.linkDaLive = link;
+      document.getElementById('link-salvo-msg').textContent = 'Salvo ✓';
+    });
+  }
+}
+
+document.querySelectorAll('.navitem').forEach(el => {
+  el.addEventListener('click', () => { state.view = el.dataset.view; render(); });
+});
+
+document.getElementById('btn-sair').addEventListener('click', async () => {
+  await fetch('/api/logout', { method: 'POST' });
+  window.location.href = '/login.html';
+});
+
+(async function init() {
+  try {
+    await carregarTudo();
+  } catch (e) {
+    // se não autenticado, api() já redireciona
+  }
+  render();
+  checarStatus();
+  setInterval(checarStatus, 15000);
+})();
+</script>
+</body>
+</html>

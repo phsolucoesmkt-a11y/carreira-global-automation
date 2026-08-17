@@ -1,0 +1,16 @@
+{
+  "name": "carreira-global-automation",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Sistema próprio (fora do n8n) que replica os fluxos operacionais do Carreira Global, começando pelo de criar grupo automaticamente.",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "node-cron": "^4.6.0"
+  }
+}
