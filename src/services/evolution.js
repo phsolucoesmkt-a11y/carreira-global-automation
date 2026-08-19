@@ -117,14 +117,17 @@ export async function buscarParticipantesDoGrupo({ groupJid }) {
   return body.participants ?? [];
 }
 
-// Espelha "Enviar audio".
+// Espelha "Enviar audio". Usa o endpoint dedicado de áudio de voz (não o
+// sendMedia genérico) — o sendMedia manda o arquivo com o Content-Type que
+// o Google Drive devolve (application/octet-stream), e o WhatsApp não
+// reproduz isso como áudio. O sendWhatsAppAudio converte pra
+// audio/ogg;codecs=opus (nota de voz de verdade, com waveform e ptt).
 export async function enviarAudio({ remoteJid, audioUrl }) {
-  return call(`/message/sendMedia/${INSTANCE}`, {
+  return call(`/message/sendWhatsAppAudio/${INSTANCE}`, {
     method: "POST",
     body: JSON.stringify({
       number: remoteJid,
-      mediatype: "audio",
-      media: driveShareLinkParaDownload(audioUrl),
+      audio: driveShareLinkParaDownload(audioUrl),
     }),
   });
 }
