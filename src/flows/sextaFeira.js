@@ -3,7 +3,7 @@ import { db } from "../db.js";
 import { lerCamposDoFluxo, lerConfiguracao } from "../services/config.js";
 import { LINK_DA_LIVE_PADRAO, LINK_REPLAY_PADRAO } from "../services/linkDaLive.js";
 import { TEXTOS_PADRAO } from "./textosPadrao.js";
-import { atualizarParticipantesDoGrupo, marcarGrupoInativo } from "../services/gruposStore.js";
+import { atualizarParticipantesDoGrupo, marcarGrupoInativo, promoverGruposPendentes } from "../services/gruposStore.js";
 
 function gruposAtivos() {
   return db.prepare(`SELECT id, nome FROM arvore_grupos WHERE status = 'Ativo'`).all();
@@ -57,6 +57,13 @@ async function executarEncerrarGrupo(chave, log) {
     }
     marcarGrupoInativo(grupo.id);
     registrar(`2. Grupo encerrado e marcado como Inativo (${grupo.nome ?? grupo.id})`, { novoNome: campos.prefixoNome, participantes: totalParticipantes });
+  }
+
+  const promovidos = promoverGruposPendentes();
+  if (promovidos.length > 0) {
+    registrar("3. Grupo(s) Pendente(s) promovido(s) a Ativo — já criados com antecedência, agora entram nos disparos", {
+      grupos: promovidos.map((g) => g.nome ?? g.id),
+    });
   }
 
   return { totalGrupos: grupos.length, passos };

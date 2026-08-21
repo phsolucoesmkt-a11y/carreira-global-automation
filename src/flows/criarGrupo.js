@@ -5,7 +5,13 @@ import {
   buscarLinkDeConvite,
   atualizarParticipantes,
 } from "../services/evolution.js";
-import { lerModeloDoGrupo, gravarResultadoNoModelo, adicionarNaArvoreDeGrupos } from "../services/gruposStore.js";
+import {
+  lerModeloDoGrupo,
+  gravarResultadoNoModelo,
+  adicionarNaArvoreDeGrupos,
+  buscarGrupoPendente,
+  existeGrupoAtivo,
+} from "../services/gruposStore.js";
 
 // Número usado só pra viabilizar a criação do grupo (o WhatsApp exige
 // pelo menos 1 participante) — mesmo número fixo do fluxo original no n8n.
@@ -35,6 +41,13 @@ export async function executarCriarGrupo({ log = console.log, adminsParaAdiciona
     passos.push({ passo, dados });
     log(`[criar-grupo] ${passo}`, dados ?? "");
   };
+
+  if (buscarGrupoPendente()) {
+    throw new Error(
+      "Já existe um grupo Pendente aguardando ativação. Ele vira Ativo sozinho quando o grupo atual for encerrado — não é preciso (nem seguro) criar outro agora."
+    );
+  }
+  const statusInicial = existeGrupoAtivo() ? "Pendente" : "Ativo";
 
   const modelo = lerModeloDoGrupo();
   registrar("1. Lido o molde do grupo (Página1)", modelo);
@@ -72,8 +85,12 @@ export async function executarCriarGrupo({ log = console.log, adminsParaAdiciona
   gravarResultadoNoModelo({ groupId, inviteUrl });
   registrar("7. Link e id gravados de volta no molde (banco local)");
 
-  adicionarNaArvoreDeGrupos({ groupId, nome: modelo.nome, link: inviteUrl });
-  registrar("8. Grupo adicionado como Ativo na árvore de grupos (banco local)");
+  adicionarNaArvoreDeGrupos({ groupId, nome: modelo.nome, link: inviteUrl, status: statusInicial });
+  registrar(
+    statusInicial === "Ativo"
+      ? "8. Grupo adicionado como Ativo na árvore de grupos (banco local) — já entra nos disparos"
+      : "8. Grupo adicionado como Pendente na árvore de grupos (banco local) — já existe outro Ativo; este só entra nos disparos quando o atual for encerrado"
+  );
 
-  return { groupId, inviteUrl, passos };
+  return { groupId, inviteUrl, status: statusInicial, passos };
 }

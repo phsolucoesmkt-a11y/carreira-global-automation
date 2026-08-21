@@ -33,6 +33,7 @@
   .badge.sucesso, .badge.ativo { background: rgba(52,211,153,0.15); color: var(--ok); }
   .badge.erro { background: rgba(248,113,113,0.15); color: var(--err); }
   .badge.sem-dados, .badge.inativo { background: rgba(139,147,163,0.15); color: var(--muted); }
+  .badge.pendente { background: rgba(250,204,21,0.15); color: #facc15; }
   .dia-header { font-size: 13px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.04em; margin: 22px 0 8px; }
   .dia-header:first-child { margin-top: 0; }
   form { display: flex; flex-direction: column; gap: 10px; }
@@ -80,7 +81,7 @@ async function api(path, opts) {
 }
 
 function badge(status) {
-  const cls = status === 'Ativo' ? 'ativo' : status === 'sucesso' ? 'sucesso' : status === 'erro' ? 'erro' : 'sem-dados';
+  const cls = status === 'Ativo' ? 'ativo' : status === 'Pendente' ? 'pendente' : status === 'Inativo' ? 'inativo' : status === 'sucesso' ? 'sucesso' : status === 'erro' ? 'erro' : 'sem-dados';
   return `<span class="badge ${cls}">${status}</span>`;
 }
 
@@ -265,14 +266,20 @@ function renderCardGrupo(g) {
 
 function renderGrupos() {
   const ativos = state.grupos.filter(g => g.status === 'Ativo');
-  const inativos = state.grupos.filter(g => g.status !== 'Ativo');
+  const pendentes = state.grupos.filter(g => g.status === 'Pendente');
+  const inativos = state.grupos.filter(g => g.status === 'Inativo');
   return `
     <div class="page-header">
-      <div><h1 class="page-title">Grupos</h1><div class="page-sub">Grupos criados por este sistema — ativos e histórico</div></div>
+      <div><h1 class="page-title">Grupos</h1><div class="page-sub">Grupos criados por este sistema — ativos, pendentes e histórico</div></div>
     </div>
     ${state.grupos.length === 0 ? '<div class="empty">Nenhum grupo criado ainda.</div>' : `
       <div class="dia-header">Ativos (${ativos.length})</div>
       ${ativos.length === 0 ? '<div class="empty">Nenhum grupo ativo no momento.</div>' : ativos.map(renderCardGrupo).join('')}
+      <div class="dia-header">Pendentes (${pendentes.length})</div>
+      ${pendentes.length === 0 ? '<div class="empty">Nenhum grupo pendente.</div>' : `
+        <div class="muted" style="margin-bottom:8px">Já criados de verdade (link pronto pra usar), mas ainda fora dos disparos automáticos — ativam sozinhos quando o grupo Ativo atual for encerrado.</div>
+        ${pendentes.map(renderCardGrupo).join('')}
+      `}
       <div class="dia-header">Inativos / encerrados (${inativos.length})</div>
       ${inativos.length === 0 ? '<div class="empty">Nenhum grupo inativo ainda.</div>' : inativos.map(renderCardGrupo).join('')}
     `}

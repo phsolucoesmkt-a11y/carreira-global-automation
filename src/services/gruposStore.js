@@ -38,12 +38,35 @@ export function gravarResultadoNoModelo({ groupId, inviteUrl }) {
   ).run(groupId, inviteUrl);
 }
 
-// Substitui "Adiciona na árvore dos Grupos".
-export function adicionarNaArvoreDeGrupos({ groupId, nome, link }) {
+// Substitui "Adiciona na árvore dos Grupos". `status` normalmente é 'Ativo',
+// mas pode nascer 'Pendente' quando já existe um grupo Ativo rodando essa
+// semana (grupo criado com antecedência, só ativa quando o outro encerrar).
+export function adicionarNaArvoreDeGrupos({ groupId, nome, link, status = "Ativo" }) {
   db.prepare(
-    `INSERT INTO arvore_grupos (id, nome, link, status) VALUES (?, ?, ?, 'Ativo')
-     ON CONFLICT(id) DO UPDATE SET status = 'Ativo', nome = excluded.nome, link = excluded.link, atualizado_em = datetime('now')`
-  ).run(groupId, nome, link ?? null);
+    `INSERT INTO arvore_grupos (id, nome, link, status) VALUES (?, ?, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET status = excluded.status, nome = excluded.nome, link = excluded.link, atualizado_em = datetime('now')`
+  ).run(groupId, nome, link ?? null, status);
+}
+
+// Existe algum grupo aguardando ativação (criado com antecedência, ainda
+// fora dos disparos)?
+export function buscarGrupoPendente() {
+  return db.prepare(`SELECT * FROM arvore_grupos WHERE status = 'Pendente' ORDER BY criado_em DESC LIMIT 1`).get() ?? null;
+}
+
+export function existeGrupoAtivo() {
+  return !!db.prepare(`SELECT 1 FROM arvore_grupos WHERE status = 'Ativo' LIMIT 1`).get();
+}
+
+// Promove o(s) grupo(s) pendente(s) pra Ativo — chamado quando o grupo
+// atual é encerrado, pra destravar os disparos no grupo que já estava
+// esperando. Retorna os grupos promovidos.
+export function promoverGruposPendentes() {
+  const pendentes = db.prepare(`SELECT * FROM arvore_grupos WHERE status = 'Pendente'`).all();
+  if (pendentes.length > 0) {
+    db.prepare(`UPDATE arvore_grupos SET status = 'Ativo', atualizado_em = datetime('now') WHERE status = 'Pendente'`).run();
+  }
+  return pendentes;
 }
 
 export function listarArvoreDeGrupos() {
