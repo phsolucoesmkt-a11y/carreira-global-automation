@@ -26,11 +26,11 @@ import {
   executarGarantindoVaga,
 } from "./flows/duranteALive.js";
 import { TEXTOS_PADRAO } from "./flows/textosPadrao.js";
-import { lerModeloCompleto, definirModeloDoGrupo, listarArvoreDeGrupos, buscarGrupoPorId, atualizarParticipantesDoGrupo } from "./services/gruposStore.js";
+import { lerModeloCompleto, definirModeloDoGrupo, listarArvoreDeGrupos, buscarGrupoPorId, atualizarParticipantesDoGrupo, adicionarNaArvoreDeGrupos } from "./services/gruposStore.js";
 import { buscarParticipantesDoGrupo } from "./services/evolution.js";
 import { registrarExecucao, listarExecucoes, ultimaExecucaoPorFluxo } from "./services/execucoes.js";
 import { createSessionToken, verifySessionToken, parseCookies } from "./services/session.js";
-import { lerCamposDoFluxo, salvarCamposDoFluxo, lerCronDoFluxo, salvarCronDoFluxo, lerConfiguracao, definirConfiguracao } from "./services/config.js";
+import { lerCamposDoFluxo, salvarCamposDoFluxo, lerCronDoFluxo, salvarCronDoFluxo, lerAtivoDoFluxo, salvarAtivoDoFluxo, lerConfiguracao, definirConfiguracao } from "./services/config.js";
 import { LINK_DA_LIVE_PADRAO, LINK_REPLAY_PADRAO } from "./services/linkDaLive.js";
 import { cronParaTexto } from "./services/cronTexto.js";
 
@@ -96,7 +96,17 @@ function agendarFluxo(fluxo) {
   const anterior = tarefasAgendadas.get(fluxo.chave);
   if (anterior) anterior.stop();
   const expressao = lerCronDoFluxo(fluxo.chave, fluxo.cronPadrao);
-  const tarefa = cron.schedule(expressao, () => executarFluxo(fluxo, "automatico"), { timezone: "America/Sao_Paulo" });
+  const tarefa = cron.schedule(
+    expressao,
+    () => {
+      if (!lerAtivoDoFluxo(fluxo.chave)) {
+        console.log(`[automatico] ${fluxo.chave} pausado, pulando disparo automático`);
+        return;
+      }
+      executarFluxo(fluxo, "automatico");
+    },
+    { timezone: "America/Sao_Paulo" }
+  );
   tarefasAgendadas.set(fluxo.chave, tarefa);
 }
 
@@ -155,6 +165,31 @@ app.get("/api/arvore-grupos", (_req, res) => {
   res.json({ grupos: listarArvoreDeGrupos() });
 });
 
+// Cadastro manual: usado quando um grupo foi criado direto no WhatsApp
+// (fora do fluxo "Criar o Grupo") e precisa entrar na árvore pra receber
+// os disparos. Faz upsert pelo id — também serve pra corrigir nome/link/
+// status de um grupo já cadastrado.
+app.post("/api/arvore-grupos", (req, res) => {
+  const { groupId, nome, link, status } = req.body ?? {};
+  if (!groupId) return res.status(400).json({ error: "Campo 'groupId' é obrigatório." });
+  if (status && !["Ativo", "Pendente", "Inativo"].includes(status)) {
+    return res.status(400).json({ error: "Campo 'status' precisa ser Ativo, Pendente ou Inativo." });
+  }
+  adicionarNaArvoreDeGrupos({ groupId, nome: nome || groupId, link: link || null, status: status || "Ativo" });
+  res.json({ ok: true });
+});
+
+app.put("/api/arvore-grupos/:id/status", (req, res) => {
+  const grupo = buscarGrupoPorId(req.params.id);
+  if (!grupo) return res.status(404).json({ error: "Grupo não encontrado." });
+  const { status } = req.body ?? {};
+  if (!["Ativo", "Pendente", "Inativo"].includes(status)) {
+    return res.status(400).json({ error: "Campo 'status' precisa ser Ativo, Pendente ou Inativo." });
+  }
+  adicionarNaArvoreDeGrupos({ groupId: grupo.id, nome: grupo.nome, link: grupo.link, status });
+  res.json({ ok: true });
+});
+
 app.get("/api/fluxos", (_req, res) => {
   const lista = FLUXOS.map((f) => {
     const cronAtual = lerCronDoFluxo(f.chave, f.cronPadrao);
@@ -164,6 +199,7 @@ app.get("/api/fluxos", (_req, res) => {
       dia: f.dia,
       quando: cronParaTexto(cronAtual),
       editavel: f.defaults !== null,
+      ativo: lerAtivoDoFluxo(f.chave),
       ultimaExecucao: ultimaExecucaoPorFluxo(f.chave) ?? null,
     };
   });
@@ -179,6 +215,16 @@ app.post("/api/fluxos/:chave/executar", async (req, res) => {
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }
+});
+
+// Liga/desliga o disparo automático de um fluxo (não afeta "Executar agora").
+app.put("/api/fluxos/:chave/ativo", (req, res) => {
+  const fluxo = FLUXOS.find((f) => f.chave === req.params.chave);
+  if (!fluxo) return res.status(404).json({ error: "Fluxo não encontrado." });
+  const { ativo } = req.body ?? {};
+  if (typeof ativo !== "boolean") return res.status(400).json({ error: "Campo 'ativo' precisa ser true ou false." });
+  salvarAtivoDoFluxo(fluxo.chave, ativo);
+  res.json({ ok: true, ativo });
 });
 
 // Campos de mensagem + horário editáveis de um fluxo.

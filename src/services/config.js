@@ -42,3 +42,18 @@ export function salvarCronDoFluxo(chave, cron) {
      ON CONFLICT(chave) DO UPDATE SET cron = excluded.cron, atualizado_em = datetime('now')`
   ).run(chave, cron);
 }
+
+// Chave liga/desliga por fluxo: pausado não dispara sozinho no horário
+// automático, mas continua podendo ser executado manualmente ("Executar
+// agora"). Sem linha salva = ativo (comportamento padrão de sempre).
+export function lerAtivoDoFluxo(chave) {
+  const row = db.prepare(`SELECT ativo FROM fluxos_config WHERE chave = ?`).get(chave);
+  return row?.ativo === null || row?.ativo === undefined ? true : !!row.ativo;
+}
+
+export function salvarAtivoDoFluxo(chave, ativo) {
+  db.prepare(
+    `INSERT INTO fluxos_config (chave, ativo, atualizado_em) VALUES (?, ?, datetime('now'))
+     ON CONFLICT(chave) DO UPDATE SET ativo = excluded.ativo, atualizado_em = datetime('now')`
+  ).run(chave, ativo ? 1 : 0);
+}

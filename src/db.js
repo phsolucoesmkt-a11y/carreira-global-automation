@@ -76,3 +76,9 @@ if (!colunas.some((c) => c.name === "participantes")) {
 if (!colunas.some((c) => c.name === "participantes_atualizado_em")) {
   db.exec(`ALTER TABLE arvore_grupos ADD COLUMN participantes_atualizado_em TEXT`);
 }
+
+// Migração: coluna "ativo" no fluxos_config (chave liga/desliga por fluxo).
+const colunasFluxos = db.prepare(`PRAGMA table_info(fluxos_config)`).all();
+if (!colunasFluxos.some((c) => c.name === "ativo")) {
+  db.exec(`ALTER TABLE fluxos_config ADD COLUMN ativo INTEGER`);
+}

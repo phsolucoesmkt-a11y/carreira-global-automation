@@ -36,6 +36,13 @@
   .badge.pendente { background: rgba(250,204,21,0.15); color: #facc15; }
   .dia-header { font-size: 13px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.04em; margin: 22px 0 8px; }
   .dia-header:first-child { margin-top: 0; }
+  .switch { position: relative; display: inline-block; width: 38px; height: 21px; flex-shrink: 0; cursor: pointer; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch .track { position: absolute; inset: 0; background: var(--border); border-radius: 999px; transition: background 0.15s; }
+  .switch .knob { position: absolute; width: 15px; height: 15px; left: 3px; top: 3px; background: #fff; border-radius: 999px; transition: transform 0.15s; }
+  .switch input:checked + .track { background: var(--ok); }
+  .switch input:checked + .track .knob { transform: translateX(17px); }
+  .fluxo-toggle { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
   form { display: flex; flex-direction: column; gap: 10px; }
   input, textarea { background: #0e1117; border: 1px solid var(--border); color: var(--text); padding: 9px 11px; border-radius: 8px; font-size: 13px; font-family: inherit; width: 100%; }
   label { font-size: 12px; color: var(--muted); margin-bottom: 4px; display: block; }
@@ -198,6 +205,10 @@ function renderFluxos() {
             <div style="font-weight:600">${f.nome}</div>
             <div class="muted">Automático: ${f.quando}</div>
             ${f.ultimaExecucao ? `<div class="muted" style="margin-top:4px">Última execução (${f.ultimaExecucao.origem}): ${fmtData(f.ultimaExecucao.executado_em)} ${badge(f.ultimaExecucao.status)}</div>` : '<div class="muted" style="margin-top:4px">Nunca executado</div>'}
+            <label class="fluxo-toggle" style="margin-top:8px">
+              <span class="switch"><input type="checkbox" data-toggle-ativo="${f.chave}" ${f.ativo ? 'checked' : ''}><span class="track"><span class="knob"></span></span></span>
+              ${f.ativo ? 'Automático ligado' : 'Automático pausado (executar manualmente continua funcionando)'}
+            </label>
           </div>
           <div class="actions">
             ${f.editavel ? `<button class="small secondary" data-editar="${f.chave}">Editar</button>` : ''}
@@ -257,9 +268,47 @@ function renderCardGrupo(g) {
         </div>
         <div style="text-align:right">
           ${badge(g.status)}
-          <div style="margin-top:8px"><button class="small secondary" data-atualizar-participantes="${g.id}">Atualizar participantes</button></div>
+          <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+            <button class="small secondary" data-atualizar-participantes="${g.id}">Atualizar participantes</button>
+            ${g.status !== 'Ativo' ? `<button class="small secondary" data-mudar-status="${g.id}" data-novo-status="Ativo">Marcar Ativo</button>` : ''}
+            ${g.status !== 'Pendente' ? `<button class="small secondary" data-mudar-status="${g.id}" data-novo-status="Pendente">Marcar Pendente</button>` : ''}
+            ${g.status !== 'Inativo' ? `<button class="small secondary" data-mudar-status="${g.id}" data-novo-status="Inativo">Marcar Inativo</button>` : ''}
+          </div>
         </div>
       </div>
+    </div>
+  `;
+}
+
+function renderFormAdicionarGrupo() {
+  return `
+    <div class="card">
+      <div style="font-weight:600;margin-bottom:10px">Cadastrar grupo manualmente</div>
+      <div class="muted" style="margin-bottom:10px">Use isto quando um grupo foi criado direto no WhatsApp (fora do fluxo "Criar o Grupo") e precisa entrar no sistema pra receber os disparos.</div>
+      <form id="form-add-grupo">
+        <div>
+          <label>ID do grupo (ex: 120363xxxxxxxxxxxx@g.us)</label>
+          <input type="text" id="ag-id" required />
+        </div>
+        <div>
+          <label>Nome (opcional)</label>
+          <input type="text" id="ag-nome" />
+        </div>
+        <div>
+          <label>Link de convite (opcional)</label>
+          <input type="text" id="ag-link" />
+        </div>
+        <div>
+          <label>Status</label>
+          <select id="ag-status" style="background:#0e1117;border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:8px;font-size:13px;width:100%">
+            <option value="Ativo">Ativo — entra nos disparos agora</option>
+            <option value="Pendente">Pendente — aguarda o grupo Ativo atual encerrar</option>
+            <option value="Inativo">Inativo — só histórico</option>
+          </select>
+        </div>
+        <div><button type="submit">Cadastrar</button></div>
+      </form>
+      <div id="add-grupo-msg" class="muted" style="margin-top:8px"></div>
     </div>
   `;
 }
@@ -272,6 +321,7 @@ function renderGrupos() {
     <div class="page-header">
       <div><h1 class="page-title">Grupos</h1><div class="page-sub">Grupos criados por este sistema — ativos, pendentes e histórico</div></div>
     </div>
+    ${renderFormAdicionarGrupo()}
     ${state.grupos.length === 0 ? '<div class="empty">Nenhum grupo criado ainda.</div>' : `
       <div class="dia-header">Ativos (${ativos.length})</div>
       ${ativos.length === 0 ? '<div class="empty">Nenhum grupo ativo no momento.</div>' : ativos.map(renderCardGrupo).join('')}
@@ -367,6 +417,27 @@ function attachHandlers() {
     });
   });
 
+  document.querySelectorAll('[data-toggle-ativo]').forEach(input => {
+    input.addEventListener('change', async () => {
+      const chave = input.dataset.toggleAtivo;
+      const ativo = input.checked;
+      input.disabled = true;
+      try {
+        await api(`/api/fluxos/${chave}/ativo`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ativo }),
+        });
+        await carregarTudo();
+        render();
+      } catch (e) {
+        alert(`Erro ao atualizar: ${e.message}`);
+        input.checked = !ativo;
+        input.disabled = false;
+      }
+    });
+  });
+
   document.querySelectorAll('[data-atualizar-participantes]').forEach(btn => {
     btn.addEventListener('click', async () => {
       const id = btn.dataset.atualizarParticipantes;
@@ -383,6 +454,49 @@ function attachHandlers() {
       }
     });
   });
+
+  document.querySelectorAll('[data-mudar-status]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.mudarStatus;
+      const status = btn.dataset.novoStatus;
+      if (!confirm(`Marcar este grupo como "${status}"?`)) return;
+      btn.disabled = true;
+      try {
+        await api(`/api/arvore-grupos/${encodeURIComponent(id)}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status }),
+        });
+        await carregarTudo();
+        render();
+      } catch (e) {
+        alert(`Erro: ${e.message}`);
+        btn.disabled = false;
+      }
+    });
+  });
+
+  const formAddGrupo = document.getElementById('form-add-grupo');
+  if (formAddGrupo) {
+    formAddGrupo.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const groupId = document.getElementById('ag-id').value.trim();
+      const nome = document.getElementById('ag-nome').value.trim();
+      const link = document.getElementById('ag-link').value.trim();
+      const status = document.getElementById('ag-status').value;
+      try {
+        await api('/api/arvore-grupos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ groupId, nome, link, status }),
+        });
+        await carregarTudo();
+        render();
+      } catch (e) {
+        document.getElementById('add-grupo-msg').textContent = `Erro: ${e.message}`;
+      }
+    });
+  }
 
   const formModelo = document.getElementById('form-modelo');
   if (formModelo) {
