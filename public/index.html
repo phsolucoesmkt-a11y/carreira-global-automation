@@ -6,88 +6,202 @@
 <title>Carreira Global — Automação</title>
 <style>
   :root {
-    --bg: #0b0d12; --card: #12151c; --border: #232733; --text: #e7e9ee; --muted: #8b93a3;
-    --accent: #818cf8; --accent-dim: rgba(129,140,248,0.15); --ok: #34d399; --err: #f87171;
+    --bg: #08090c; --bg-elev: #0b0d12;
+    --surface: #12141b; --surface-2: #171a23; --surface-hover: #1c1f2a;
+    --border: #21242f; --border-soft: #191c26;
+    --text: #eef0f4; --muted: #9298ab; --faint: #575e73;
+    --gravado: #8b8ff8; --gravado-dim: rgba(139,143,248,0.13); --gravado-grad: linear-gradient(135deg, #9498f9, #6b6ef0);
+    --aovivo: #fb5f6a; --aovivo-dim: rgba(251,95,106,0.13); --aovivo-grad: linear-gradient(135deg, #fd7078, #f0424f);
+    --ok: #3ddc97; --ok-dim: rgba(61,220,151,0.13);
+    --warn: #f5c04a; --warn-dim: rgba(245,192,74,0.13);
+    --err: #f2555f; --err-dim: rgba(242,85,95,0.13);
+    --radius: 12px; --radius-sm: 8px; --radius-lg: 16px;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  body {
+    margin: 0; background:
+      radial-gradient(700px 420px at 8% -6%, rgba(139,143,248,0.06), transparent 60%),
+      radial-gradient(700px 420px at 96% 8%, rgba(251,95,106,0.05), transparent 55%),
+      var(--bg);
+    color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
   .app { display: flex; min-height: 100vh; }
-  nav { width: 220px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 20px 14px; display: flex; flex-direction: column; }
-  nav .brand { font-weight: 700; font-size: 16px; margin-bottom: 2px; }
-  nav .brand-sub { color: var(--muted); font-size: 11.5px; margin-bottom: 22px; }
-  .navitem { padding: 9px 12px; border-radius: 8px; font-size: 13.5px; cursor: pointer; color: var(--muted); margin-bottom: 2px; }
-  .navitem:hover { background: rgba(255,255,255,0.04); }
-  .navitem.active { background: var(--accent-dim); color: var(--accent); font-weight: 600; }
-  main { flex: 1; padding: 28px 32px; max-width: 900px; }
-  .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
-  .page-title { font-size: 21px; margin: 0 0 3px; }
-  .page-sub { color: var(--muted); font-size: 13px; }
-  .status { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); }
-  .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--muted); }
-  .dot.on { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
-  .dot.off { background: var(--err); }
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
-  .row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-  .muted { color: var(--muted); font-size: 12px; }
-  .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; }
-  .badge.sucesso, .badge.ativo { background: rgba(52,211,153,0.15); color: var(--ok); }
-  .badge.erro { background: rgba(248,113,113,0.15); color: var(--err); }
-  .badge.sem-dados, .badge.inativo { background: rgba(139,147,163,0.15); color: var(--muted); }
-  .badge.pendente { background: rgba(250,204,21,0.15); color: #facc15; }
-  .dia-header { font-size: 13px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.04em; margin: 22px 0 8px; }
+
+  /* ---------- Sidebar ---------- */
+  nav {
+    width: 232px; flex-shrink: 0; border-right: 1px solid var(--border-soft);
+    padding: 22px 14px; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh;
+    background: var(--bg-elev);
+  }
+  .brand-row { display: flex; align-items: center; gap: 10px; padding: 0 8px; margin-bottom: 26px; }
+  .brand-mark { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, var(--gravado), var(--aovivo)); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12.5px; color: #08090c; flex-shrink: 0; }
+  .brand-text { font-weight: 700; font-size: 14.5px; letter-spacing: -0.01em; line-height: 1.2; }
+  .brand-sub { color: var(--faint); font-size: 10.5px; letter-spacing: 0.04em; margin-top: 1px; }
+  .nav-section-label { font-size: 10px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.06em; padding: 14px 12px 6px; font-weight: 700; }
+  .navitem {
+    display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: var(--radius-sm);
+    font-size: 13.5px; cursor: pointer; color: var(--muted); margin-bottom: 1px; font-weight: 500;
+    border-left: 2px solid transparent; transition: background 0.12s, color 0.12s;
+  }
+  .navitem svg { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.85; }
+  .navitem:hover { background: var(--surface-hover); color: var(--text); }
+  .navitem.active { background: var(--gravado-dim); color: var(--gravado); font-weight: 600; border-left-color: var(--gravado); }
+  .navitem.active svg { opacity: 1; }
+  nav .spacer { flex: 1; }
+  .status-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); padding: 0 8px; margin-bottom: 12px; }
+  .dot { width: 7px; height: 7px; border-radius: 999px; background: var(--muted); flex-shrink: 0; }
+  .dot.on { background: var(--ok); box-shadow: 0 0 7px var(--ok); }
+  .dot.off { background: var(--err); box-shadow: 0 0 7px var(--err); }
+  .user-row { font-size: 11.5px; color: var(--faint); padding: 0 8px 10px; }
+
+  /* ---------- Main ---------- */
+  main { flex: 1; padding: 30px 40px 60px; max-width: 1040px; }
+  .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; gap: 16px; }
+  .page-title { font-size: 22px; margin: 0 0 4px; font-weight: 700; letter-spacing: -0.015em; }
+  .page-sub { color: var(--muted); font-size: 13px; line-height: 1.5; max-width: 560px; }
+
+  /* ---------- Track identity ---------- */
+  .track-dot { display: inline-block; width: 7px; height: 7px; border-radius: 999px; margin-right: 6px; vertical-align: middle; }
+  .track-dot.gravado { background: var(--gravado); box-shadow: 0 0 6px var(--gravado); }
+  .track-dot.ao-vivo { background: var(--aovivo); box-shadow: 0 0 6px var(--aovivo); }
+  .track-toggle { display: inline-flex; gap: 2px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; padding: 3px; margin-bottom: 22px; }
+  .track-toggle button {
+    background: transparent; border: none; color: var(--muted); font-size: 12.5px; font-weight: 600;
+    padding: 7px 16px; border-radius: 999px; cursor: pointer; display: flex; align-items: center; transition: background 0.15s, color 0.15s;
+  }
+  .track-toggle button.active.gravado { background: var(--gravado-dim); color: var(--gravado); }
+  .track-toggle button.active.ao-vivo { background: var(--aovivo-dim); color: var(--aovivo); }
+
+  /* ---------- Cards ---------- */
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px 18px; margin-bottom: 10px; transition: border-color 0.15s;
+  }
+  .card.track-gravado { border-left: 3px solid var(--gravado); }
+  .card.track-ao-vivo { border-left: 3px solid var(--aovivo); }
+  .card-title { font-weight: 600; font-size: 14px; letter-spacing: -0.005em; }
+  .row { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
+  .row.top { align-items: flex-start; }
+  .muted { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+  .faint { color: var(--faint); font-size: 11.5px; }
+
+  /* ---------- Badges ---------- */
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap; }
+  .badge.sucesso, .badge.ativo { background: var(--ok-dim); color: var(--ok); }
+  .badge.erro { background: var(--err-dim); color: var(--err); }
+  .badge.sem-dados, .badge.inativo { background: rgba(146,152,171,0.12); color: var(--muted); }
+  .badge.pendente { background: var(--warn-dim); color: var(--warn); }
+
+  /* ---------- Section headers ---------- */
+  .dia-header { font-size: 11.5px; font-weight: 700; color: var(--faint); text-transform: uppercase; letter-spacing: 0.07em; margin: 22px 0 8px; padding-left: 2px; }
   .dia-header:first-child { margin-top: 0; }
-  .trilha-header { font-size: 15px; font-weight: 800; margin: 30px 0 4px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
-  .trilha-header:first-child { margin-top: 0; }
-  .trilha-header.ao-vivo { color: #f87171; }
-  .trilha-toggle { display: flex; gap: 6px; margin-bottom: 18px; }
-  .trilha-toggle button { background: transparent; border: 1px solid var(--border); color: var(--muted); }
-  .trilha-toggle button.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
-  .switch { position: relative; display: inline-block; width: 38px; height: 21px; flex-shrink: 0; cursor: pointer; }
-  .switch input { opacity: 0; width: 0; height: 0; }
+  .section-count { font-weight: 500; color: var(--faint); text-transform: none; letter-spacing: 0; }
+
+  /* ---------- Toggle switch ---------- */
+  .switch { position: relative; display: inline-block; width: 34px; height: 19px; flex-shrink: 0; cursor: pointer; }
+  .switch input { opacity: 0; width: 0; height: 0; position: absolute; }
   .switch .track { position: absolute; inset: 0; background: var(--border); border-radius: 999px; transition: background 0.15s; }
-  .switch .knob { position: absolute; width: 15px; height: 15px; left: 3px; top: 3px; background: #fff; border-radius: 999px; transition: transform 0.15s; }
+  .switch .knob { position: absolute; width: 13px; height: 13px; left: 3px; top: 3px; background: #fff; border-radius: 999px; transition: transform 0.15s; }
   .switch input:checked + .track { background: var(--ok); }
-  .switch input:checked + .track .knob { transform: translateX(17px); }
-  .fluxo-toggle { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
-  form { display: flex; flex-direction: column; gap: 10px; }
-  input, textarea { background: #0e1117; border: 1px solid var(--border); color: var(--text); padding: 9px 11px; border-radius: 8px; font-size: 13px; font-family: inherit; width: 100%; }
-  label { font-size: 12px; color: var(--muted); margin-bottom: 4px; display: block; }
-  button { background: var(--accent); color: #0b0d12; border: none; padding: 9px 15px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; }
+  .switch input:checked + .track .knob { transform: translateX(15px); }
+  .fluxo-toggle { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--muted); margin-top: 10px; }
+
+  /* ---------- Forms ---------- */
+  form { display: flex; flex-direction: column; gap: 12px; }
+  input, textarea, select {
+    background: var(--bg-elev); border: 1px solid var(--border); color: var(--text);
+    padding: 9px 12px; border-radius: var(--radius-sm); font-size: 13px; font-family: inherit; width: 100%;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--gravado); box-shadow: 0 0 0 3px var(--gravado-dim); }
+  label { font-size: 11.5px; color: var(--muted); margin-bottom: 5px; display: block; font-weight: 500; }
+
+  /* ---------- Buttons ---------- */
+  button {
+    background: var(--gravado-grad); color: #0a0b10; border: none; padding: 9px 15px; border-radius: var(--radius-sm);
+    font-weight: 600; font-size: 12.5px; cursor: pointer; transition: filter 0.12s, transform 0.08s;
+  }
+  button:hover { filter: brightness(1.08); }
+  button:active { transform: translateY(1px); }
+  button.btn-live { background: var(--aovivo-grad); color: #1a0708; }
   button.secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
-  button.small { padding: 6px 12px; font-size: 12.5px; }
-  button:disabled { opacity: 0.5; cursor: not-allowed; }
-  .empty { color: var(--muted); font-size: 13px; padding: 12px 0; }
-  pre { background: #0e1117; border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 12px; overflow-x: auto; white-space: pre-wrap; }
-  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
-  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
-  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
-  .stat-value { font-size: 22px; font-weight: 700; margin-top: 4px; }
-  a { color: var(--accent); }
+  button.secondary:hover { background: var(--surface-hover); filter: none; }
+  button.danger { background: transparent; border: 1px solid var(--err-dim); color: var(--err); }
+  button.danger:hover { background: var(--err-dim); filter: none; }
+  button.small { padding: 6px 12px; font-size: 11.5px; }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+  .empty { color: var(--faint); font-size: 12.5px; padding: 16px; text-align: center; border: 1px dashed var(--border); border-radius: var(--radius); background: var(--bg-elev); }
+  pre { background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; font-size: 11.5px; overflow-x: auto; white-space: pre-wrap; color: var(--muted); }
+
+  /* ---------- Stats / dashboard ---------- */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 26px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
+  .stat-card.track-gravado { border-top: 2px solid var(--gravado); }
+  .stat-card.track-ao-vivo { border-top: 2px solid var(--aovivo); }
+  .stat-label { font-size: 10.5px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; display: flex; align-items: center; }
+  .stat-value { font-size: 25px; font-weight: 700; margin-top: 6px; letter-spacing: -0.02em; }
+  .stat-hint { font-size: 11px; color: var(--faint); margin-top: 2px; }
+
+  .dash-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 28px; }
+  .dash-col-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .dash-col-title h3 { font-size: 13.5px; margin: 0; display: flex; align-items: center; font-weight: 700; }
+  .link-btn { background: none; border: none; color: var(--muted); font-size: 11.5px; font-weight: 600; cursor: pointer; padding: 4px 6px; }
+  .link-btn:hover { color: var(--text); }
+  .mini-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--border-soft); margin-bottom: 6px; }
+  .mini-row .mr-name { font-size: 12.5px; font-weight: 600; }
+  .mini-row .mr-when { font-size: 11px; color: var(--faint); margin-top: 1px; }
+
+  a { color: var(--gravado); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  h3 { font-size: 14px; font-weight: 700; margin: 0; }
+
+  @media (max-width: 900px) {
+    .dash-cols { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
 </style>
 </head>
 <body>
   <div class="app">
     <nav>
-      <div class="brand">Carreira Global</div>
-      <div class="brand-sub">Automação</div>
-      <div class="navitem" data-view="overview">◆ Visão Geral</div>
-      <div class="navitem" data-view="fluxos">▤ Fluxos</div>
-      <div class="navitem" data-view="grupos">◎ Grupos</div>
-      <div class="navitem" data-view="editar">✎ Editar</div>
-      <div class="navitem" data-view="config">🔗 Configurações</div>
-      <div class="navitem" data-view="usuarios">⚙ Usuários</div>
-      <div style="flex:1"></div>
-      <div class="status" style="margin-bottom:12px"><span id="dot" class="dot"></span><span id="status-text">verificando…</span></div>
-      <button class="secondary small" id="btn-sair">Sair</button>
+      <div class="brand-row">
+        <div class="brand-mark">CG</div>
+        <div>
+          <div class="brand-text">Carreira Global</div>
+          <div class="brand-sub">AUTOMAÇÃO</div>
+        </div>
+      </div>
+      <div class="navitem" data-view="overview"><span>Visão Geral</span></div>
+      <div class="navitem" data-view="fluxos"><span>Fluxos</span></div>
+      <div class="navitem" data-view="grupos"><span>Grupos</span></div>
+      <div class="navitem" data-view="editar"><span>Editar</span></div>
+      <div class="navitem" data-view="config"><span>Configurações</span></div>
+      <div class="navitem" data-view="usuarios"><span>Usuários</span></div>
+      <div class="spacer"></div>
+      <div class="status-row"><span id="dot" class="dot"></span><span id="status-text">verificando…</span></div>
+      <div class="user-row" id="user-row"></div>
+      <button class="secondary small" id="btn-sair" style="width:100%">Sair</button>
     </nav>
     <main id="main"></main>
   </div>
 
 <script>
+const ICONS = {
+  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg>',
+  flow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="6" height="6" rx="1.5"/><rect x="15" y="4" width="6" height="6" rx="1.5"/><rect x="9" y="15" width="6" height="6" rx="1.5"/><path d="M6 10v2a2 2 0 0 0 2 2h1"/><path d="M18 10v2a2 2 0 0 1-2 2h-1"/></svg>',
+  users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+  link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+  gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+};
+
 let state = {
   view: 'overview', fluxos: [], grupos: [], modelo: null, execucoes: [], me: null,
   linkDaLive: '', linkReplay: '', linkAoVivo: '', editando: null, editandoCampos: null, editandoCron: '',
-  trilhaGrupos: 'gravado', trilhaEditar: 'gravado',
+  trilhaGrupos: 'gravado', trilhaEditar: 'gravado', trilhaFluxos: 'gravado',
   gruposAoVivo: [], modeloAoVivo: null,
 };
 
@@ -107,6 +221,14 @@ async function api(path, opts) {
 function badge(status) {
   const cls = status === 'Ativo' ? 'ativo' : status === 'Pendente' ? 'pendente' : status === 'Inativo' ? 'inativo' : status === 'sucesso' ? 'sucesso' : status === 'erro' ? 'erro' : 'sem-dados';
   return `<span class="badge ${cls}">${status}</span>`;
+}
+
+function trackLabel(trilha) {
+  return trilha === 'ao-vivo' ? 'Ao Vivo' : 'Gravado';
+}
+
+function trackDot(trilha) {
+  return `<span class="track-dot ${trilha === 'ao-vivo' ? 'ao-vivo' : 'gravado'}"></span>`;
 }
 
 function fmtData(iso) {
@@ -149,32 +271,44 @@ async function carregarTudo() {
   state.modeloAoVivo = modeloAoVivoRes.modelo;
 }
 
+function renderMiniRow(f) {
+  return `
+    <div class="mini-row">
+      <div>
+        <div class="mr-name">${f.nome}</div>
+        <div class="mr-when">${f.quando}</div>
+      </div>
+      <div>${f.ultimaExecucao ? badge(f.ultimaExecucao.status) : badge('sem-dados')}</div>
+    </div>
+  `;
+}
+
 function renderOverview() {
   const gruposAtivosGravado = state.grupos.filter(g => g.status === 'Ativo').length;
   const gruposAtivosAoVivo = state.gruposAoVivo.filter(g => g.status === 'Ativo').length;
   const ultimasExecucoes = state.fluxos.filter(f => f.ultimaExecucao).length;
+  const fluxosGravado = state.fluxos.filter(f => (f.trilha || 'gravado') === 'gravado');
+  const fluxosAoVivo = state.fluxos.filter(f => f.trilha === 'ao-vivo');
   return `
     <div class="page-header">
-      <div><h1 class="page-title">Visão Geral</h1><div class="page-sub">Resumo do sistema de automação</div></div>
+      <div><h1 class="page-title">Visão Geral</h1><div class="page-sub">Resumo das duas trilhas de automação — Gravado e Ao Vivo rodando em paralelo</div></div>
     </div>
     <div class="stats-grid">
-      <div class="stat-card"><div class="stat-label">Fluxos configurados</div><div class="stat-value">${state.fluxos.length}</div></div>
-      <div class="stat-card"><div class="stat-label">⚪ Grupos ativos (Gravado)</div><div class="stat-value">${gruposAtivosGravado}</div></div>
-      <div class="stat-card"><div class="stat-label">🔴 Grupos ativos (Ao Vivo)</div><div class="stat-value">${gruposAtivosAoVivo}</div></div>
+      <div class="stat-card"><div class="stat-label">Fluxos configurados</div><div class="stat-value">${state.fluxos.length}</div><div class="stat-hint">${fluxosGravado.length} Gravado · ${fluxosAoVivo.length} Ao Vivo</div></div>
+      <div class="stat-card track-gravado"><div class="stat-label">${trackDot('gravado')}Grupos ativos</div><div class="stat-value">${gruposAtivosGravado}</div><div class="stat-hint">Trilha Gravado</div></div>
+      <div class="stat-card track-ao-vivo"><div class="stat-label">${trackDot('ao-vivo')}Grupos ativos</div><div class="stat-value">${gruposAtivosAoVivo}</div><div class="stat-hint">Trilha Ao Vivo</div></div>
+      <div class="stat-card"><div class="stat-label">Já executados</div><div class="stat-value">${ultimasExecucoes}</div><div class="stat-hint">de ${state.fluxos.length} fluxos</div></div>
     </div>
-    <div class="stats-grid" style="grid-template-columns:1fr">
-      <div class="stat-card"><div class="stat-label">Fluxos já executados</div><div class="stat-value">${ultimasExecucoes}</div></div>
-    </div>
-    <h3 style="margin:0 0 12px">Próximas execuções automáticas</h3>
-    ${state.fluxos.map(f => `
-      <div class="card row">
-        <div>
-          <div style="font-weight:600">${f.nome}</div>
-          <div class="muted">${f.quando}</div>
-        </div>
-        <div>${f.ultimaExecucao ? badge(f.ultimaExecucao.status) : badge('sem-dados')}</div>
+    <div class="dash-cols">
+      <div>
+        <div class="dash-col-title"><h3>${trackDot('gravado')}Gravado — próximos</h3><button class="link-btn" data-goto-fluxos="gravado">ver todos →</button></div>
+        ${fluxosGravado.slice(0, 6).map(renderMiniRow).join('') || '<div class="empty">Nenhum fluxo.</div>'}
       </div>
-    `).join('')}
+      <div>
+        <div class="dash-col-title"><h3>${trackDot('ao-vivo')}Ao Vivo — próximos</h3><button class="link-btn" data-goto-fluxos="ao-vivo">ver todos →</button></div>
+        ${fluxosAoVivo.slice(0, 6).map(renderMiniRow).join('') || '<div class="empty">Nenhum fluxo.</div>'}
+      </div>
+    </div>
   `;
 }
 
@@ -202,7 +336,7 @@ function renderEdicaoFluxo(f) {
   if (state.editando !== f.chave) return '';
   const campos = state.editandoCampos || {};
   return `
-    <div class="card" style="margin-top:10px;border-color:var(--accent)">
+    <div class="card" style="margin-top:10px;border-color:${f.trilha === 'ao-vivo' ? 'var(--aovivo)' : 'var(--gravado)'}">
       <form id="form-editar-fluxo" data-chave="${f.chave}">
         ${Object.entries(campos).map(([k, v]) => renderCampoInput(k, v)).join('')}
         <div>
@@ -219,45 +353,56 @@ function renderEdicaoFluxo(f) {
   `;
 }
 
-function renderFluxos() {
-  let ultimoDia = null;
-  let ultimaTrilha = null;
-  const blocos = state.fluxos.map(f => {
-    const trilhaHeader = f.trilha !== ultimaTrilha
-      ? `<div class="trilha-header ${f.trilha}">${f.trilha === 'ao-vivo' ? '🔴 Ao Vivo' : '⚪ Gravado'}</div>`
-      : '';
-    if (f.trilha !== ultimaTrilha) ultimoDia = null;
-    ultimaTrilha = f.trilha;
-    const header = trilhaHeader + (f.dia !== ultimoDia ? `<div class="dia-header">${f.dia}</div>` : '');
-    ultimoDia = f.dia;
-    return `
-      ${header}
-      <div class="card">
-        <div class="row">
-          <div>
-            <div style="font-weight:600">${f.nome}</div>
-            <div class="muted">Automático: ${f.quando}</div>
-            ${f.ultimaExecucao ? `<div class="muted" style="margin-top:4px">Última execução (${f.ultimaExecucao.origem}): ${fmtData(f.ultimaExecucao.executado_em)} ${badge(f.ultimaExecucao.status)}</div>` : '<div class="muted" style="margin-top:4px">Nunca executado</div>'}
-            <label class="fluxo-toggle" style="margin-top:8px">
-              <span class="switch"><input type="checkbox" data-toggle-ativo="${f.chave}" ${f.ativo ? 'checked' : ''}><span class="track"><span class="knob"></span></span></span>
-              ${f.ativo ? 'Automático ligado' : 'Automático pausado (executar manualmente continua funcionando)'}
-            </label>
-          </div>
-          <div class="actions">
-            ${f.editavel ? `<button class="small secondary" data-editar="${f.chave}">Editar</button>` : ''}
-            <button class="small" data-executar="${f.chave}">Executar agora</button>
-          </div>
+function renderCardFluxo(f) {
+  const isLive = f.trilha === 'ao-vivo';
+  return `
+    <div class="card track-${isLive ? 'ao-vivo' : 'gravado'}">
+      <div class="row top">
+        <div>
+          <div class="card-title">${f.nome}</div>
+          <div class="muted" style="margin-top:2px">Automático: ${f.quando}</div>
+          ${f.ultimaExecucao ? `<div class="muted" style="margin-top:4px">Última execução (${f.ultimaExecucao.origem}): ${fmtData(f.ultimaExecucao.executado_em)} ${badge(f.ultimaExecucao.status)}</div>` : '<div class="faint" style="margin-top:4px">Nunca executado</div>'}
+          <label class="fluxo-toggle">
+            <span class="switch"><input type="checkbox" data-toggle-ativo="${f.chave}" ${f.ativo ? 'checked' : ''}><span class="track"><span class="knob"></span></span></span>
+            ${f.ativo ? 'Automático ligado' : 'Automático pausado (executar manualmente continua funcionando)'}
+          </label>
         </div>
-        <div id="resultado-${f.chave}" style="margin-top:10px"></div>
-        ${renderEdicaoFluxo(f)}
+        <div class="actions">
+          ${f.editavel ? `<button class="small secondary" data-editar="${f.chave}">Editar</button>` : ''}
+          <button class="small ${isLive ? 'btn-live' : ''}" data-executar="${f.chave}">Executar agora</button>
+        </div>
       </div>
-    `;
+      <div id="resultado-${f.chave}" style="margin-top:10px"></div>
+      ${renderEdicaoFluxo(f)}
+    </div>
+  `;
+}
+
+function renderTrackToggle(stateKey) {
+  const atual = state[stateKey];
+  return `
+    <div class="track-toggle">
+      <button type="button" class="${atual === 'gravado' ? 'active gravado' : ''}" data-set-trilha="${stateKey}" data-trilha-valor="gravado">${trackDot('gravado')}Gravado</button>
+      <button type="button" class="${atual === 'ao-vivo' ? 'active ao-vivo' : ''}" data-set-trilha="${stateKey}" data-trilha-valor="ao-vivo">${trackDot('ao-vivo')}Ao Vivo</button>
+    </div>
+  `;
+}
+
+function renderFluxos() {
+  const trilha = state.trilhaFluxos;
+  const lista = state.fluxos.filter(f => (f.trilha || 'gravado') === trilha);
+  let ultimoDia = null;
+  const blocos = lista.map(f => {
+    const header = f.dia !== ultimoDia ? `<div class="dia-header">${f.dia}</div>` : '';
+    ultimoDia = f.dia;
+    return header + renderCardFluxo(f);
   }).join('');
   return `
     <div class="page-header">
-      <div><h1 class="page-title">Fluxos</h1><div class="page-sub">Todos os fluxos automatizados, na ordem em que rodam durante a semana</div></div>
+      <div><h1 class="page-title">Fluxos</h1><div class="page-sub">Fluxos automatizados da trilha selecionada, na ordem em que rodam durante a semana</div></div>
     </div>
-    ${blocos}
+    ${renderTrackToggle('trilhaFluxos')}
+    ${blocos || '<div class="empty">Nenhum fluxo nessa trilha.</div>'}
   `;
 }
 
@@ -266,27 +411,27 @@ function renderConfig() {
     <div class="page-header">
       <div><h1 class="page-title">Configurações</h1><div class="page-sub">Valores compartilhados entre fluxos</div></div>
     </div>
-    <div class="card">
+    <div class="card track-gravado">
       <form id="form-link-live">
-        <label>Link da live (usado nas mensagens de contagem regressiva de quinta-feira)</label>
+        <label>${trackDot('gravado')}Link da live (usado nas mensagens de contagem regressiva de quinta-feira)</label>
         <input type="text" id="f-link-live" value="${state.linkDaLive}" />
         <div><button type="submit">Salvar</button></div>
       </form>
       <div id="link-salvo-msg" class="muted" style="margin-top:8px"></div>
     </div>
-    <div class="card">
+    <div class="card track-gravado">
       <form id="form-link-replay">
-        <label>Link do replay (usado nas mensagens de sexta-feira, pós-workshop)</label>
+        <label>${trackDot('gravado')}Link do replay (usado nas mensagens de sexta-feira, pós-workshop)</label>
         <input type="text" id="f-link-replay" value="${state.linkReplay}" />
         <div><button type="submit">Salvar</button></div>
       </form>
       <div id="replay-salvo-msg" class="muted" style="margin-top:8px"></div>
     </div>
-    <div class="card">
+    <div class="card track-ao-vivo">
       <form id="form-link-ao-vivo">
-        <label>🔴 Link do Ao Vivo (YouTube — usado nas mensagens de contagem regressiva e durante a live da trilha Ao Vivo)</label>
+        <label>${trackDot('ao-vivo')}Link do Ao Vivo (YouTube — usado nas mensagens de contagem regressiva e durante a live)</label>
         <input type="text" id="f-link-ao-vivo" value="${state.linkAoVivo}" />
-        <div><button type="submit">Salvar</button></div>
+        <div><button class="btn-live" type="submit">Salvar</button></div>
       </form>
       <div id="link-ao-vivo-salvo-msg" class="muted" style="margin-top:8px"></div>
     </div>
@@ -294,14 +439,15 @@ function renderConfig() {
 }
 
 function renderCardGrupo(g, trilha) {
+  const isLive = trilha === 'ao-vivo';
   return `
-    <div class="card">
-      <div class="row">
+    <div class="card track-${isLive ? 'ao-vivo' : 'gravado'}">
+      <div class="row top">
         <div>
-          <div style="font-weight:600">${g.nome || g.id}</div>
-          <div class="muted">ID: ${g.id}</div>
-          ${g.link ? `<div class="muted"><a href="${g.link}" target="_blank">${g.link}</a></div>` : '<div class="muted">Sem link registrado</div>'}
-          <div class="muted">Criado em ${fmtData(g.criado_em)}</div>
+          <div class="card-title">${g.nome || g.id}</div>
+          <div class="faint" style="margin-top:2px">ID: ${g.id}</div>
+          ${g.link ? `<div class="muted" style="margin-top:2px"><a href="${g.link}" target="_blank">${g.link}</a></div>` : '<div class="faint" style="margin-top:2px">Sem link registrado</div>'}
+          <div class="muted" style="margin-top:6px">Criado em ${fmtData(g.criado_em)}</div>
           <div class="muted">
             ${g.participantes != null ? `${g.participantes} participante${g.participantes === 1 ? '' : 's'}` : 'Participantes ainda não conferidos'}
             ${g.participantes_atualizado_em ? ` · atualizado em ${fmtData(g.participantes_atualizado_em)}` : ''}
@@ -309,11 +455,11 @@ function renderCardGrupo(g, trilha) {
         </div>
         <div style="text-align:right">
           ${badge(g.status)}
-          <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+          <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;align-items:flex-end">
             <button class="small secondary" data-atualizar-participantes="${g.id}" data-trilha="${trilha}">Atualizar participantes</button>
             ${g.status !== 'Ativo' ? `<button class="small secondary" data-mudar-status="${g.id}" data-novo-status="Ativo" data-trilha="${trilha}">Marcar Ativo</button>` : ''}
             ${g.status !== 'Pendente' ? `<button class="small secondary" data-mudar-status="${g.id}" data-novo-status="Pendente" data-trilha="${trilha}">Marcar Pendente</button>` : ''}
-            ${g.status !== 'Inativo' ? `<button class="small secondary" data-mudar-status="${g.id}" data-novo-status="Inativo" data-trilha="${trilha}">Marcar Inativo</button>` : ''}
+            ${g.status !== 'Inativo' ? `<button class="small danger" data-mudar-status="${g.id}" data-novo-status="Inativo" data-trilha="${trilha}">Marcar Inativo</button>` : ''}
           </div>
         </div>
       </div>
@@ -324,8 +470,8 @@ function renderCardGrupo(g, trilha) {
 function renderFormAdicionarGrupo(trilha) {
   return `
     <div class="card">
-      <div style="font-weight:600;margin-bottom:10px">Cadastrar grupo manualmente</div>
-      <div class="muted" style="margin-bottom:10px">Use isto quando um grupo foi criado direto no WhatsApp (fora do fluxo "Criar o Grupo") e precisa entrar no sistema pra receber os disparos.</div>
+      <div class="card-title" style="margin-bottom:8px">Cadastrar grupo manualmente</div>
+      <div class="muted" style="margin-bottom:12px">Use isto quando um grupo foi criado direto no WhatsApp (fora do fluxo "Criar o Grupo") e precisa entrar no sistema pra receber os disparos.</div>
       <form id="form-add-grupo" data-trilha="${trilha}">
         <div>
           <label>ID do grupo (ex: 120363xxxxxxxxxxxx@g.us)</label>
@@ -341,25 +487,15 @@ function renderFormAdicionarGrupo(trilha) {
         </div>
         <div>
           <label>Status</label>
-          <select id="ag-status" style="background:#0e1117;border:1px solid var(--border);color:var(--text);padding:9px 11px;border-radius:8px;font-size:13px;width:100%">
+          <select id="ag-status">
             <option value="Ativo">Ativo — entra nos disparos agora</option>
             <option value="Pendente">Pendente — aguarda o grupo Ativo atual encerrar</option>
             <option value="Inativo">Inativo — só histórico</option>
           </select>
         </div>
-        <div><button type="submit">Cadastrar</button></div>
+        <div><button type="submit" class="${trilha === 'ao-vivo' ? 'btn-live' : ''}">Cadastrar</button></div>
       </form>
       <div id="add-grupo-msg" class="muted" style="margin-top:8px"></div>
-    </div>
-  `;
-}
-
-function renderTrilhaToggle(stateKey) {
-  const atual = state[stateKey];
-  return `
-    <div class="trilha-toggle">
-      <button type="button" class="${atual === 'gravado' ? 'active' : ''}" data-set-trilha="${stateKey}" data-trilha-valor="gravado">⚪ Gravado</button>
-      <button type="button" class="${atual === 'ao-vivo' ? 'active' : ''}" data-set-trilha="${stateKey}" data-trilha-valor="ao-vivo">🔴 Ao Vivo</button>
     </div>
   `;
 }
@@ -374,17 +510,17 @@ function renderGrupos() {
     <div class="page-header">
       <div><h1 class="page-title">Grupos</h1><div class="page-sub">Grupos criados por este sistema — ativos, pendentes e histórico</div></div>
     </div>
-    ${renderTrilhaToggle('trilhaGrupos')}
+    ${renderTrackToggle('trilhaGrupos')}
     ${renderFormAdicionarGrupo(trilha)}
     ${lista.length === 0 ? '<div class="empty">Nenhum grupo criado ainda.</div>' : `
-      <div class="dia-header">Ativos (${ativos.length})</div>
+      <div class="dia-header">Ativos <span class="section-count">(${ativos.length})</span></div>
       ${ativos.length === 0 ? '<div class="empty">Nenhum grupo ativo no momento.</div>' : ativos.map(g => renderCardGrupo(g, trilha)).join('')}
-      <div class="dia-header">Pendentes (${pendentes.length})</div>
+      <div class="dia-header">Pendentes <span class="section-count">(${pendentes.length})</span></div>
       ${pendentes.length === 0 ? '<div class="empty">Nenhum grupo pendente.</div>' : `
         <div class="muted" style="margin-bottom:8px">Já criados de verdade (link pronto pra usar), mas ainda fora dos disparos automáticos — ativam sozinhos quando o grupo Ativo atual for encerrado.</div>
         ${pendentes.map(g => renderCardGrupo(g, trilha)).join('')}
       `}
-      <div class="dia-header">Inativos / encerrados (${inativos.length})</div>
+      <div class="dia-header">Inativos / encerrados <span class="section-count">(${inativos.length})</span></div>
       ${inativos.length === 0 ? '<div class="empty">Nenhum grupo inativo ainda.</div>' : inativos.map(g => renderCardGrupo(g, trilha)).join('')}
     `}
   `;
@@ -393,12 +529,13 @@ function renderGrupos() {
 function renderEditar() {
   const trilha = state.trilhaEditar;
   const m = trilha === 'ao-vivo' ? state.modeloAoVivo : state.modelo;
+  const isLive = trilha === 'ao-vivo';
   return `
     <div class="page-header">
-      <div><h1 class="page-title">Editar molde do grupo</h1><div class="page-sub">Nome, imagem e descrição reaproveitados toda semana pelo fluxo "Criar o Grupo"</div></div>
+      <div><h1 class="page-title">Editar molde do grupo</h1><div class="page-sub">Nome, imagem, descrição e áudio reaproveitados toda semana pelo fluxo "Criar o Grupo"</div></div>
     </div>
-    ${renderTrilhaToggle('trilhaEditar')}
-    <div class="card">
+    ${renderTrackToggle('trilhaEditar')}
+    <div class="card track-${isLive ? 'ao-vivo' : 'gravado'}">
       <form id="form-modelo" data-trilha="${trilha}">
         <div>
           <label>Nome do grupo</label>
@@ -416,7 +553,7 @@ function renderEditar() {
           <label>Áudio Nina (Google Drive)</label>
           <input type="text" id="f-audio" value="${m?.audio_url ?? ''}" />
         </div>
-        <div><button type="submit">Salvar</button></div>
+        <div><button type="submit" class="${isLive ? 'btn-live' : ''}">Salvar</button></div>
       </form>
       <div class="muted" style="margin-top:12px">
         ${m?.ultimo_group_id ? `Último grupo criado: ${m.ultimo_group_id}${m.ultimo_invite_url ? ` · <a href="${m.ultimo_invite_url}" target="_blank">${m.ultimo_invite_url}</a>` : ''}` : 'Nenhum grupo criado a partir deste molde ainda.'}
@@ -433,7 +570,7 @@ function renderUsuarios() {
     </div>
     <div class="card">
       <div class="muted">Usuário logado</div>
-      <div style="font-weight:600;margin-top:4px">${state.me || '—'}</div>
+      <div class="card-title" style="margin-top:4px">${state.me || '—'}</div>
     </div>
     <div class="card">
       <div class="muted">Este sistema hoje tem um único usuário administrador (login/senha configurados no servidor). Pra trocar a senha ou adicionar outro usuário, é preciso mexer nas variáveis de ambiente do servidor.</div>
@@ -457,6 +594,14 @@ function attachHandlers() {
   document.querySelectorAll('[data-set-trilha]').forEach(btn => {
     btn.addEventListener('click', () => {
       state[btn.dataset.setTrilha] = btn.dataset.trilhaValor;
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-goto-fluxos]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.view = 'fluxos';
+      state.trilhaFluxos = btn.dataset.gotoFluxos;
       render();
     });
   });
@@ -682,9 +827,19 @@ document.getElementById('btn-sair').addEventListener('click', async () => {
   window.location.href = '/login.html';
 });
 
+function montarIconesNav() {
+  const map = { overview: 'home', fluxos: 'flow', grupos: 'users', editar: 'edit', config: 'link', usuarios: 'gear' };
+  document.querySelectorAll('.navitem').forEach(el => {
+    const iconKey = map[el.dataset.view];
+    if (iconKey) el.insertAdjacentHTML('afterbegin', ICONS[iconKey]);
+  });
+}
+
 (async function init() {
+  montarIconesNav();
   try {
     await carregarTudo();
+    document.getElementById('user-row').textContent = state.me ? `👤 ${state.me}` : '';
   } catch (e) {
     // se não autenticado, api() já redireciona
   }

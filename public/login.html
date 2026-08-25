@@ -5,30 +5,73 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Entrar — Carreira Global Automação</title>
 <style>
-  :root { --bg:#0b0d12; --card:#12151c; --border:#232733; --text:#e7e9ee; --muted:#8b93a3; --accent:#818cf8; --err:#f87171; }
+  :root {
+    --bg: #0a0b0f; --bg-grid: #0d0f16;
+    --card: #12141c; --card-2: #161925;
+    --border: #232636; --border-soft: #1a1d2a;
+    --text: #edeef2; --muted: #8890a4; --faint: #565d70;
+    --accent: #8b8ff8; --accent-2: #6d6ff0; --live: #fb5f6a;
+    --err: #f87171;
+  }
   * { box-sizing: border-box; }
-  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
-  .card { width:100%; max-width:360px; background:var(--card); border:1px solid var(--border); border-radius:14px; padding:28px; }
-  h1 { font-size:20px; margin:0 0 4px; }
-  .sub { color:var(--muted); font-size:13px; margin-bottom:24px; }
-  label { font-size:12px; color:var(--muted); display:block; margin-bottom:6px; }
-  input { width:100%; background:#0e1117; border:1px solid var(--border); color:var(--text); padding:10px 12px; border-radius:8px; font-size:14px; margin-bottom:16px; }
-  button { width:100%; background:var(--accent); color:#0b0d12; border:none; padding:11px; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer; }
-  .erro { color:var(--err); font-size:13px; margin-top:12px; min-height:16px; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(560px 320px at 15% 10%, rgba(139,143,248,0.14), transparent 60%),
+      radial-gradient(520px 300px at 88% 88%, rgba(251,95,106,0.10), transparent 60%),
+      var(--bg);
+    color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  .wrap { width: 100%; max-width: 380px; padding: 0 20px; }
+  .brand-row { display: flex; align-items: center; gap: 10px; margin-bottom: 26px; justify-content: center; }
+  .brand-mark { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, var(--accent), var(--live)); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; color: #0a0b0f; }
+  .brand-text { font-weight: 700; font-size: 15px; letter-spacing: -0.01em; }
+  .brand-sub { color: var(--faint); font-size: 11px; margin-top: 1px; }
+  .card { background: linear-gradient(180deg, var(--card-2), var(--card)); border: 1px solid var(--border); border-radius: 16px; padding: 30px 28px; box-shadow: 0 20px 50px -20px rgba(0,0,0,0.6); }
+  h1 { font-size: 19px; margin: 0 0 4px; font-weight: 700; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+  label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px; font-weight: 500; }
+  .field { margin-bottom: 16px; }
+  input {
+    width: 100%; background: #0c0e14; border: 1px solid var(--border); color: var(--text);
+    padding: 11px 13px; border-radius: 9px; font-size: 14px; transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(139,143,248,0.15); }
+  button {
+    width: 100%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #0a0b0f; border: none;
+    padding: 12px; border-radius: 9px; font-weight: 700; font-size: 14px; cursor: pointer; margin-top: 4px;
+    transition: filter 0.15s, transform 0.1s;
+  }
+  button:hover { filter: brightness(1.08); }
+  button:active { transform: translateY(1px); }
+  .erro { color: var(--err); font-size: 12.5px; margin-top: 12px; min-height: 14px; text-align: center; }
 </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Carreira Global</h1>
-    <div class="sub">Automação — entre para continuar</div>
-    <form id="login-form">
-      <label>Usuário</label>
-      <input type="text" id="user" autocomplete="username" required />
-      <label>Senha</label>
-      <input type="password" id="password" autocomplete="current-password" required />
-      <button type="submit">Entrar</button>
-      <div class="erro" id="erro"></div>
-    </form>
+  <div class="wrap">
+    <div class="brand-row">
+      <div class="brand-mark">CG</div>
+      <div>
+        <div class="brand-text">Carreira Global</div>
+        <div class="brand-sub">GRAVADO · AO VIVO</div>
+      </div>
+    </div>
+    <div class="card">
+      <h1>Entrar</h1>
+      <div class="sub">Acesse o painel de automação</div>
+      <form id="login-form">
+        <div class="field">
+          <label>Usuário</label>
+          <input type="text" id="user" autocomplete="username" required />
+        </div>
+        <div class="field">
+          <label>Senha</label>
+          <input type="password" id="password" autocomplete="current-password" required />
+        </div>
+        <button type="submit">Entrar</button>
+        <div class="erro" id="erro"></div>
+      </form>
+    </div>
   </div>
 <script>
 document.getElementById('login-form').addEventListener('submit', async (e) => {
