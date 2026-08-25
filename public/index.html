@@ -36,6 +36,12 @@
   .badge.pendente { background: rgba(250,204,21,0.15); color: #facc15; }
   .dia-header { font-size: 13px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.04em; margin: 22px 0 8px; }
   .dia-header:first-child { margin-top: 0; }
+  .trilha-header { font-size: 15px; font-weight: 800; margin: 30px 0 4px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+  .trilha-header:first-child { margin-top: 0; }
+  .trilha-header.ao-vivo { color: #f87171; }
+  .trilha-toggle { display: flex; gap: 6px; margin-bottom: 18px; }
+  .trilha-toggle button { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .trilha-toggle button.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
   .switch { position: relative; display: inline-block; width: 38px; height: 21px; flex-shrink: 0; cursor: pointer; }
   .switch input { opacity: 0; width: 0; height: 0; }
   .switch .track { position: absolute; inset: 0; background: var(--border); border-radius: 999px; transition: background 0.15s; }
@@ -78,7 +84,18 @@
   </div>
 
 <script>
-let state = { view: 'overview', fluxos: [], grupos: [], modelo: null, execucoes: [], me: null, linkDaLive: '', linkReplay: '', editando: null, editandoCampos: null, editandoCron: '' };
+let state = {
+  view: 'overview', fluxos: [], grupos: [], modelo: null, execucoes: [], me: null,
+  linkDaLive: '', linkReplay: '', linkAoVivo: '', editando: null, editandoCampos: null, editandoCron: '',
+  trilhaGrupos: 'gravado', trilhaEditar: 'gravado',
+  gruposAoVivo: [], modeloAoVivo: null,
+};
+
+function endpointsTrilha(trilha) {
+  return trilha === 'ao-vivo'
+    ? { grupos: '/api/arvore-grupos-ao-vivo', modelo: '/api/grupo-modelo-ao-vivo' }
+    : { grupos: '/api/arvore-grupos', modelo: '/api/grupo-modelo' };
+}
 
 async function api(path, opts) {
   const res = await fetch(path, opts);
@@ -110,13 +127,16 @@ async function checarStatus() {
 }
 
 async function carregarTudo() {
-  const [fluxosRes, gruposRes, modeloRes, meRes, linkRes, replayRes] = await Promise.all([
+  const [fluxosRes, gruposRes, modeloRes, meRes, linkRes, replayRes, linkAoVivoRes, gruposAoVivoRes, modeloAoVivoRes] = await Promise.all([
     api('/api/fluxos'),
     api('/api/arvore-grupos'),
     api('/api/grupo-modelo'),
     api('/api/me'),
     api('/api/config/link-da-live'),
     api('/api/config/link-replay'),
+    api('/api/config/link-ao-vivo'),
+    api('/api/arvore-grupos-ao-vivo'),
+    api('/api/grupo-modelo-ao-vivo'),
   ]);
   state.fluxos = fluxosRes.fluxos;
   state.grupos = gruposRes.grupos;
@@ -124,10 +144,14 @@ async function carregarTudo() {
   state.me = meRes.user;
   state.linkDaLive = linkRes.link;
   state.linkReplay = replayRes.link;
+  state.linkAoVivo = linkAoVivoRes.link;
+  state.gruposAoVivo = gruposAoVivoRes.grupos;
+  state.modeloAoVivo = modeloAoVivoRes.modelo;
 }
 
 function renderOverview() {
-  const gruposAtivos = state.grupos.filter(g => g.status === 'Ativo').length;
+  const gruposAtivosGravado = state.grupos.filter(g => g.status === 'Ativo').length;
+  const gruposAtivosAoVivo = state.gruposAoVivo.filter(g => g.status === 'Ativo').length;
   const ultimasExecucoes = state.fluxos.filter(f => f.ultimaExecucao).length;
   return `
     <div class="page-header">
@@ -135,7 +159,10 @@ function renderOverview() {
     </div>
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-label">Fluxos configurados</div><div class="stat-value">${state.fluxos.length}</div></div>
-      <div class="stat-card"><div class="stat-label">Grupos ativos</div><div class="stat-value">${gruposAtivos}</div></div>
+      <div class="stat-card"><div class="stat-label">⚪ Grupos ativos (Gravado)</div><div class="stat-value">${gruposAtivosGravado}</div></div>
+      <div class="stat-card"><div class="stat-label">🔴 Grupos ativos (Ao Vivo)</div><div class="stat-value">${gruposAtivosAoVivo}</div></div>
+    </div>
+    <div class="stats-grid" style="grid-template-columns:1fr">
       <div class="stat-card"><div class="stat-label">Fluxos já executados</div><div class="stat-value">${ultimasExecucoes}</div></div>
     </div>
     <h3 style="margin:0 0 12px">Próximas execuções automáticas</h3>
@@ -194,8 +221,14 @@ function renderEdicaoFluxo(f) {
 
 function renderFluxos() {
   let ultimoDia = null;
+  let ultimaTrilha = null;
   const blocos = state.fluxos.map(f => {
-    const header = f.dia !== ultimoDia ? `<div class="dia-header">${f.dia}</div>` : '';
+    const trilhaHeader = f.trilha !== ultimaTrilha
+      ? `<div class="trilha-header ${f.trilha}">${f.trilha === 'ao-vivo' ? '🔴 Ao Vivo' : '⚪ Gravado'}</div>`
+      : '';
+    if (f.trilha !== ultimaTrilha) ultimoDia = null;
+    ultimaTrilha = f.trilha;
+    const header = trilhaHeader + (f.dia !== ultimoDia ? `<div class="dia-header">${f.dia}</div>` : '');
     ultimoDia = f.dia;
     return `
       ${header}
@@ -249,10 +282,18 @@ function renderConfig() {
       </form>
       <div id="replay-salvo-msg" class="muted" style="margin-top:8px"></div>
     </div>
+    <div class="card">
+      <form id="form-link-ao-vivo">
+        <label>🔴 Link do Ao Vivo (YouTube — usado nas mensagens de contagem regressiva e durante a live da trilha Ao Vivo)</label>
+        <input type="text" id="f-link-ao-vivo" value="${state.linkAoVivo}" />
+        <div><button type="submit">Salvar</button></div>
+      </form>
+      <div id="link-ao-vivo-salvo-msg" class="muted" style="margin-top:8px"></div>
+    </div>
   `;
 }
 
-function renderCardGrupo(g) {
+function renderCardGrupo(g, trilha) {
   return `
     <div class="card">
       <div class="row">
@@ -269,10 +310,10 @@ function renderCardGrupo(g) {
         <div style="text-align:right">
           ${badge(g.status)}
           <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;align-items:flex-end">
-            <button class="small secondary" data-atualizar-participantes="${g.id}">Atualizar participantes</button>
-            ${g.status !== 'Ativo' ? `<button class="small secondary" data-mudar-status="${g.id}" data-novo-status="Ativo">Marcar Ativo</button>` : ''}
-            ${g.status !== 'Pendente' ? `<button class="small secondary" data-mudar-status="${g.id}" data-novo-status="Pendente">Marcar Pendente</button>` : ''}
-            ${g.status !== 'Inativo' ? `<button class="small secondary" data-mudar-status="${g.id}" data-novo-status="Inativo">Marcar Inativo</button>` : ''}
+            <button class="small secondary" data-atualizar-participantes="${g.id}" data-trilha="${trilha}">Atualizar participantes</button>
+            ${g.status !== 'Ativo' ? `<button class="small secondary" data-mudar-status="${g.id}" data-novo-status="Ativo" data-trilha="${trilha}">Marcar Ativo</button>` : ''}
+            ${g.status !== 'Pendente' ? `<button class="small secondary" data-mudar-status="${g.id}" data-novo-status="Pendente" data-trilha="${trilha}">Marcar Pendente</button>` : ''}
+            ${g.status !== 'Inativo' ? `<button class="small secondary" data-mudar-status="${g.id}" data-novo-status="Inativo" data-trilha="${trilha}">Marcar Inativo</button>` : ''}
           </div>
         </div>
       </div>
@@ -280,12 +321,12 @@ function renderCardGrupo(g) {
   `;
 }
 
-function renderFormAdicionarGrupo() {
+function renderFormAdicionarGrupo(trilha) {
   return `
     <div class="card">
       <div style="font-weight:600;margin-bottom:10px">Cadastrar grupo manualmente</div>
       <div class="muted" style="margin-bottom:10px">Use isto quando um grupo foi criado direto no WhatsApp (fora do fluxo "Criar o Grupo") e precisa entrar no sistema pra receber os disparos.</div>
-      <form id="form-add-grupo">
+      <form id="form-add-grupo" data-trilha="${trilha}">
         <div>
           <label>ID do grupo (ex: 120363xxxxxxxxxxxx@g.us)</label>
           <input type="text" id="ag-id" required />
@@ -313,37 +354,52 @@ function renderFormAdicionarGrupo() {
   `;
 }
 
+function renderTrilhaToggle(stateKey) {
+  const atual = state[stateKey];
+  return `
+    <div class="trilha-toggle">
+      <button type="button" class="${atual === 'gravado' ? 'active' : ''}" data-set-trilha="${stateKey}" data-trilha-valor="gravado">⚪ Gravado</button>
+      <button type="button" class="${atual === 'ao-vivo' ? 'active' : ''}" data-set-trilha="${stateKey}" data-trilha-valor="ao-vivo">🔴 Ao Vivo</button>
+    </div>
+  `;
+}
+
 function renderGrupos() {
-  const ativos = state.grupos.filter(g => g.status === 'Ativo');
-  const pendentes = state.grupos.filter(g => g.status === 'Pendente');
-  const inativos = state.grupos.filter(g => g.status === 'Inativo');
+  const trilha = state.trilhaGrupos;
+  const lista = trilha === 'ao-vivo' ? state.gruposAoVivo : state.grupos;
+  const ativos = lista.filter(g => g.status === 'Ativo');
+  const pendentes = lista.filter(g => g.status === 'Pendente');
+  const inativos = lista.filter(g => g.status === 'Inativo');
   return `
     <div class="page-header">
       <div><h1 class="page-title">Grupos</h1><div class="page-sub">Grupos criados por este sistema — ativos, pendentes e histórico</div></div>
     </div>
-    ${renderFormAdicionarGrupo()}
-    ${state.grupos.length === 0 ? '<div class="empty">Nenhum grupo criado ainda.</div>' : `
+    ${renderTrilhaToggle('trilhaGrupos')}
+    ${renderFormAdicionarGrupo(trilha)}
+    ${lista.length === 0 ? '<div class="empty">Nenhum grupo criado ainda.</div>' : `
       <div class="dia-header">Ativos (${ativos.length})</div>
-      ${ativos.length === 0 ? '<div class="empty">Nenhum grupo ativo no momento.</div>' : ativos.map(renderCardGrupo).join('')}
+      ${ativos.length === 0 ? '<div class="empty">Nenhum grupo ativo no momento.</div>' : ativos.map(g => renderCardGrupo(g, trilha)).join('')}
       <div class="dia-header">Pendentes (${pendentes.length})</div>
       ${pendentes.length === 0 ? '<div class="empty">Nenhum grupo pendente.</div>' : `
         <div class="muted" style="margin-bottom:8px">Já criados de verdade (link pronto pra usar), mas ainda fora dos disparos automáticos — ativam sozinhos quando o grupo Ativo atual for encerrado.</div>
-        ${pendentes.map(renderCardGrupo).join('')}
+        ${pendentes.map(g => renderCardGrupo(g, trilha)).join('')}
       `}
       <div class="dia-header">Inativos / encerrados (${inativos.length})</div>
-      ${inativos.length === 0 ? '<div class="empty">Nenhum grupo inativo ainda.</div>' : inativos.map(renderCardGrupo).join('')}
+      ${inativos.length === 0 ? '<div class="empty">Nenhum grupo inativo ainda.</div>' : inativos.map(g => renderCardGrupo(g, trilha)).join('')}
     `}
   `;
 }
 
 function renderEditar() {
-  const m = state.modelo;
+  const trilha = state.trilhaEditar;
+  const m = trilha === 'ao-vivo' ? state.modeloAoVivo : state.modelo;
   return `
     <div class="page-header">
       <div><h1 class="page-title">Editar molde do grupo</h1><div class="page-sub">Nome, imagem e descrição reaproveitados toda semana pelo fluxo "Criar o Grupo"</div></div>
     </div>
+    ${renderTrilhaToggle('trilhaEditar')}
     <div class="card">
-      <form id="form-modelo">
+      <form id="form-modelo" data-trilha="${trilha}">
         <div>
           <label>Nome do grupo</label>
           <input type="text" id="f-nome" required value="${m?.nome ?? ''}" />
@@ -356,10 +412,11 @@ function renderEditar() {
           <label>URL da imagem (Google Drive)</label>
           <input type="text" id="f-imagem" value="${m?.imagem_url ?? ''}" />
         </div>
+        ${trilha === 'gravado' ? `
         <div>
           <label>Áudio Nina (Google Drive)</label>
           <input type="text" id="f-audio" value="${m?.audio_url ?? ''}" />
-        </div>
+        </div>` : ''}
         <div><button type="submit">Salvar</button></div>
       </form>
       <div class="muted" style="margin-top:12px">
@@ -398,6 +455,13 @@ function render() {
 }
 
 function attachHandlers() {
+  document.querySelectorAll('[data-set-trilha]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state[btn.dataset.setTrilha] = btn.dataset.trilhaValor;
+      render();
+    });
+  });
+
   document.querySelectorAll('[data-executar]').forEach(btn => {
     btn.addEventListener('click', async () => {
       const chave = btn.dataset.executar;
@@ -441,10 +505,11 @@ function attachHandlers() {
   document.querySelectorAll('[data-atualizar-participantes]').forEach(btn => {
     btn.addEventListener('click', async () => {
       const id = btn.dataset.atualizarParticipantes;
+      const { grupos } = endpointsTrilha(btn.dataset.trilha);
       btn.disabled = true;
       btn.textContent = 'Consultando…';
       try {
-        await api(`/api/arvore-grupos/${encodeURIComponent(id)}/atualizar-participantes`, { method: 'POST' });
+        await api(`${grupos}/${encodeURIComponent(id)}/atualizar-participantes`, { method: 'POST' });
         await carregarTudo();
         render();
       } catch (e) {
@@ -459,10 +524,11 @@ function attachHandlers() {
     btn.addEventListener('click', async () => {
       const id = btn.dataset.mudarStatus;
       const status = btn.dataset.novoStatus;
+      const { grupos } = endpointsTrilha(btn.dataset.trilha);
       if (!confirm(`Marcar este grupo como "${status}"?`)) return;
       btn.disabled = true;
       try {
-        await api(`/api/arvore-grupos/${encodeURIComponent(id)}/status`, {
+        await api(`${grupos}/${encodeURIComponent(id)}/status`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status }),
@@ -480,12 +546,13 @@ function attachHandlers() {
   if (formAddGrupo) {
     formAddGrupo.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const { grupos } = endpointsTrilha(formAddGrupo.dataset.trilha);
       const groupId = document.getElementById('ag-id').value.trim();
       const nome = document.getElementById('ag-nome').value.trim();
       const link = document.getElementById('ag-link').value.trim();
       const status = document.getElementById('ag-status').value;
       try {
-        await api('/api/arvore-grupos', {
+        await api(grupos, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ groupId, nome, link, status }),
@@ -502,14 +569,17 @@ function attachHandlers() {
   if (formModelo) {
     formModelo.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const { modelo } = endpointsTrilha(formModelo.dataset.trilha);
       const nome = document.getElementById('f-nome').value.trim();
       const descricao = document.getElementById('f-descricao').value.trim();
       const imagemUrl = document.getElementById('f-imagem').value.trim();
-      const audioUrl = document.getElementById('f-audio').value.trim();
-      await api('/api/grupo-modelo', {
+      const audioEl = document.getElementById('f-audio');
+      const body = { nome, descricao, imagemUrl };
+      if (audioEl) body.audioUrl = audioEl.value.trim();
+      await api(modelo, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome, descricao, imagemUrl, audioUrl }),
+        body: JSON.stringify(body),
       });
       await carregarTudo();
       document.getElementById('salvo-msg').textContent = 'Salvo ✓';
@@ -585,6 +655,21 @@ function attachHandlers() {
       });
       state.linkReplay = link;
       document.getElementById('replay-salvo-msg').textContent = 'Salvo ✓';
+    });
+  }
+
+  const formLinkAoVivo = document.getElementById('form-link-ao-vivo');
+  if (formLinkAoVivo) {
+    formLinkAoVivo.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const link = document.getElementById('f-link-ao-vivo').value.trim();
+      await api('/api/config/link-ao-vivo', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ link }),
+      });
+      state.linkAoVivo = link;
+      document.getElementById('link-ao-vivo-salvo-msg').textContent = 'Salvo ✓';
     });
   }
 }

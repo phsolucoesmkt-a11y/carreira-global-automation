@@ -63,6 +63,33 @@ CREATE TABLE IF NOT EXISTS fluxos_config (
   campos TEXT,
   atualizado_em TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+-- Trilha "Ao Vivo": grupo, molde e árvore completamente separados do
+-- Gravado (grupos diferentes, cadência diferente, link diferente).
+CREATE TABLE IF NOT EXISTS grupo_modelo_ao_vivo (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  nome TEXT NOT NULL,
+  imagem_url TEXT,
+  descricao TEXT,
+  ultimo_group_id TEXT,
+  ultimo_invite_url TEXT,
+  atualizado_em TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Igual arvore_grupos, mas pro Ao Vivo — inclui participantes (checado a
+-- cada 30min) e criado_por_lotacao_de (aponta pro grupo que transbordou,
+-- pra nunca criar um segundo grupo extra do mesmo transbordamento).
+CREATE TABLE IF NOT EXISTS arvore_grupos_ao_vivo (
+  id TEXT PRIMARY KEY,
+  nome TEXT,
+  link TEXT,
+  status TEXT NOT NULL DEFAULT 'Ativo',
+  criado_por_lotacao_de TEXT,
+  participantes INTEGER,
+  participantes_atualizado_em TEXT,
+  criado_em TEXT NOT NULL DEFAULT (datetime('now')),
+  atualizado_em TEXT NOT NULL DEFAULT (datetime('now'))
+);
 `);
 
 // Migração: bancos criados antes do campo "link" existir na árvore_grupos.

@@ -7,6 +7,10 @@ export function cronParaTexto(expressao) {
   const partes = expressao.trim().split(/\s+/);
   if (partes.length !== 5) return expressao;
   const [min, hora, , , diaSemana] = partes;
+  const minutosIntervalo = min.match(/^\*\/(\d+)$/);
+  if (minutosIntervalo && hora === "*" && diaSemana === "*") {
+    return `A cada ${minutosIntervalo[1]} minutos`;
+  }
   const dia = DIAS[Number(diaSemana)] ?? `dia ${diaSemana}`;
   const horaFmt = String(hora).padStart(2, "0");
   const minFmt = String(min).padStart(2, "0");

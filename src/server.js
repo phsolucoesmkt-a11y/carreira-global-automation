@@ -37,6 +37,33 @@ import { lerCamposDoFluxo, salvarCamposDoFluxo, lerCronDoFluxo, salvarCronDoFlux
 import { LINK_DA_LIVE_PADRAO, LINK_REPLAY_PADRAO } from "./services/linkDaLive.js";
 import { cronParaTexto } from "./services/cronTexto.js";
 
+// Trilha Ao Vivo — separada do Gravado (grupo, molde e link próprios).
+import { executarCriarGrupoAoVivo } from "./flows/aoVivo/criarGrupoAoVivo.js";
+import {
+  executarEHojeAoVivo,
+  executar2HorasAoVivo,
+  executar1HoraAoVivo,
+  executar10MinutosAoVivo,
+  executarEstamosAoVivo as executarEstamosAoVivoAoVivo,
+  executar20h10AoVivo,
+  executar20h20AoVivo,
+  executar20h30AoVivo,
+  executar20h40AoVivo,
+  executar20h50AoVivo,
+  executarFimDoDiaAoVivo,
+} from "./flows/aoVivo/mensagensAoVivo.js";
+import { executarChecaLotacaoAoVivo } from "./flows/aoVivo/checaLotacaoAoVivo.js";
+import { TEXTOS_AO_VIVO_PADRAO } from "./flows/textosAoVivoPadrao.js";
+import {
+  lerModeloCompletoAoVivo,
+  definirModeloDoGrupoAoVivo,
+  listarArvoreDeGruposAoVivo,
+  buscarGrupoAoVivoPorId,
+  atualizarParticipantesDoGrupoAoVivo,
+  adicionarNaArvoreDeGruposAoVivo,
+} from "./services/gruposStoreAoVivo.js";
+import { LINK_AO_VIVO_PADRAO } from "./services/linkAoVivo.js";
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(express.json());
@@ -80,6 +107,22 @@ const FLUXOS = [
   { chave: "sexta-ultima-mensagem", nome: "Sexta — Última mensagem (noite)", dia: "Sexta-feira", cronPadrao: "5 19 * * 5", executar: () => executarUltimaMensagem(), defaults: TEXTOS_PADRAO["sexta-ultima-mensagem"] },
   { chave: "sexta-22h", nome: "Sexta — Lembrete 22h", dia: "Sexta-feira", cronPadrao: "0 22 * * 5", executar: () => executarSexta22h(), defaults: TEXTOS_PADRAO["sexta-22h"] },
   { chave: "sabado-grupo-encerrado", nome: "Sábado — Grupo encerrado", dia: "Sábado", cronPadrao: "15 8 * * 6", executar: () => executarGrupoEncerrado(), defaults: TEXTOS_PADRAO["sabado-grupo-encerrado"] },
+
+  // Trilha Ao Vivo — evento ao vivo via YouTube, sempre quarta-feira.
+  // Grupo criado com antecedência (sexta), evento e encerramento na quarta.
+  { chave: "aovivo-criar-grupo", nome: "Ao Vivo — Criar o Grupo", dia: "Sexta-feira", trilha: "ao-vivo", cronPadrao: "0 9 * * 5", executar: () => executarCriarGrupoAoVivo({}), defaults: null },
+  { chave: "aovivo-e-hoje", nome: "Ao Vivo — É Hoje", dia: "Quarta-feira", trilha: "ao-vivo", cronPadrao: "0 11 * * 3", executar: () => executarEHojeAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-e-hoje"] },
+  { chave: "aovivo-2-horas", nome: "Ao Vivo — Faltam 2 horas", dia: "Quarta-feira", trilha: "ao-vivo", cronPadrao: "0 18 * * 3", executar: () => executar2HorasAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-2-horas"] },
+  { chave: "aovivo-1-hora", nome: "Ao Vivo — Falta 1 hora", dia: "Quarta-feira", trilha: "ao-vivo", cronPadrao: "0 19 * * 3", executar: () => executar1HoraAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-1-hora"] },
+  { chave: "aovivo-10-minutos", nome: "Ao Vivo — Faltam 10 minutos", dia: "Quarta-feira", trilha: "ao-vivo", cronPadrao: "50 19 * * 3", executar: () => executar10MinutosAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-10-minutos"] },
+  { chave: "aovivo-estamos-ao-vivo", nome: "Ao Vivo — Estamos ao vivo", dia: "Quarta-feira", trilha: "ao-vivo", cronPadrao: "1 20 * * 3", executar: () => executarEstamosAoVivoAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-estamos-ao-vivo"] },
+  { chave: "aovivo-durante-live-20h10", nome: "Ao Vivo — Durante a Live 20h10", dia: "Quarta-feira", trilha: "ao-vivo", cronPadrao: "10 20 * * 3", executar: () => executar20h10AoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-durante-live-20h10"] },
+  { chave: "aovivo-durante-live-20h20", nome: "Ao Vivo — Durante a Live 20h20", dia: "Quarta-feira", trilha: "ao-vivo", cronPadrao: "20 20 * * 3", executar: () => executar20h20AoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-durante-live-20h20"] },
+  { chave: "aovivo-durante-live-20h30", nome: "Ao Vivo — Durante a Live 20h30", dia: "Quarta-feira", trilha: "ao-vivo", cronPadrao: "30 20 * * 3", executar: () => executar20h30AoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-durante-live-20h30"] },
+  { chave: "aovivo-durante-live-20h40", nome: "Ao Vivo — Durante a Live 20h40", dia: "Quarta-feira", trilha: "ao-vivo", cronPadrao: "40 20 * * 3", executar: () => executar20h40AoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-durante-live-20h40"] },
+  { chave: "aovivo-durante-live-20h50", nome: "Ao Vivo — Durante a Live 20h50", dia: "Quarta-feira", trilha: "ao-vivo", cronPadrao: "50 20 * * 3", executar: () => executar20h50AoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-durante-live-20h50"] },
+  { chave: "aovivo-fim-do-dia", nome: "Ao Vivo — Fim do dia (23h05)", dia: "Quarta-feira", trilha: "ao-vivo", cronPadrao: "5 23 * * 3", executar: () => executarFimDoDiaAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-fim-do-dia"] },
+  { chave: "aovivo-checa-lotacao", nome: "Ao Vivo — Checa lotação (a cada 30min)", dia: "Contínuo", trilha: "ao-vivo", cronPadrao: "*/30 * * * *", executar: () => executarChecaLotacaoAoVivo(), defaults: null },
 ];
 
 async function executarFluxo(fluxo, origem) {
@@ -204,6 +247,7 @@ app.get("/api/fluxos", (_req, res) => {
       chave: f.chave,
       nome: f.nome,
       dia: f.dia,
+      trilha: f.trilha || "gravado",
       quando: cronParaTexto(cronAtual),
       editavel: f.defaults !== null,
       ativo: lerAtivoDoFluxo(f.chave),
@@ -295,6 +339,67 @@ app.post("/api/arvore-grupos/:id/atualizar-participantes", async (req, res) => {
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }
+});
+
+// ===== Trilha Ao Vivo — molde, árvore de grupos e link, tudo separado do Gravado =====
+
+app.get("/api/grupo-modelo-ao-vivo", (_req, res) => {
+  res.json({ modelo: lerModeloCompletoAoVivo() });
+});
+
+app.put("/api/grupo-modelo-ao-vivo", (req, res) => {
+  const { nome, imagemUrl, descricao } = req.body ?? {};
+  if (!nome) return res.status(400).json({ error: "Campo 'nome' é obrigatório." });
+  definirModeloDoGrupoAoVivo({ nome, imagemUrl, descricao });
+  res.json({ ok: true });
+});
+
+app.get("/api/arvore-grupos-ao-vivo", (_req, res) => {
+  res.json({ grupos: listarArvoreDeGruposAoVivo() });
+});
+
+app.post("/api/arvore-grupos-ao-vivo", (req, res) => {
+  const { groupId, nome, link, status } = req.body ?? {};
+  if (!groupId) return res.status(400).json({ error: "Campo 'groupId' é obrigatório." });
+  if (status && !["Ativo", "Pendente", "Inativo"].includes(status)) {
+    return res.status(400).json({ error: "Campo 'status' precisa ser Ativo, Pendente ou Inativo." });
+  }
+  adicionarNaArvoreDeGruposAoVivo({ groupId, nome: nome || groupId, link: link || null, status: status || "Ativo" });
+  res.json({ ok: true });
+});
+
+app.put("/api/arvore-grupos-ao-vivo/:id/status", (req, res) => {
+  const grupo = buscarGrupoAoVivoPorId(req.params.id);
+  if (!grupo) return res.status(404).json({ error: "Grupo não encontrado." });
+  const { status } = req.body ?? {};
+  if (!["Ativo", "Pendente", "Inativo"].includes(status)) {
+    return res.status(400).json({ error: "Campo 'status' precisa ser Ativo, Pendente ou Inativo." });
+  }
+  adicionarNaArvoreDeGruposAoVivo({ groupId: grupo.id, nome: grupo.nome, link: grupo.link, status });
+  res.json({ ok: true });
+});
+
+app.post("/api/arvore-grupos-ao-vivo/:id/atualizar-participantes", async (req, res) => {
+  const grupo = buscarGrupoAoVivoPorId(req.params.id);
+  if (!grupo) return res.status(404).json({ error: "Grupo não encontrado." });
+  try {
+    const participantes = await buscarParticipantesDoGrupo({ groupJid: grupo.id });
+    atualizarParticipantesDoGrupoAoVivo(grupo.id, participantes.length);
+    res.json({ ok: true, participantes: participantes.length });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+app.get("/api/config/link-ao-vivo", (_req, res) => {
+  res.json({ link: lerConfiguracao("link_ao_vivo", LINK_AO_VIVO_PADRAO) });
+});
+
+app.put("/api/config/link-ao-vivo", (req, res) => {
+  const { link } = req.body ?? {};
+  if (!link) return res.status(400).json({ error: "Campo 'link' é obrigatório." });
+  definirConfiguracao("link_ao_vivo", link);
+  res.json({ ok: true });
 });
 
 app.get("/api/execucoes", (req, res) => {
