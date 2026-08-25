@@ -39,6 +39,14 @@ import { cronParaTexto } from "./services/cronTexto.js";
 
 // Trilha Ao Vivo — separada do Gravado (grupo, molde e link próprios).
 import { executarCriarGrupoAoVivo } from "./flows/aoVivo/criarGrupoAoVivo.js";
+import { executarSejaBemVindoAoVivo } from "./flows/aoVivo/sejaBemVindoAoVivo.js";
+import { executarEAmanhaAoVivo, executarAudioNinaAoVivo } from "./flows/aoVivo/enqueteEUAAoVivo.js";
+import {
+  executarAvisoExtensaoAoVivo,
+  executarContaRapidaAoVivo,
+  executarUltimaMensagemAoVivo,
+  executarGrupoEncerradoAoVivo,
+} from "./flows/aoVivo/posEventoAoVivo.js";
 import {
   executarEHojeAoVivo,
   executar2HorasAoVivo,
@@ -109,8 +117,12 @@ const FLUXOS = [
   { chave: "sabado-grupo-encerrado", nome: "Sábado — Grupo encerrado", dia: "Sábado", cronPadrao: "15 8 * * 6", executar: () => executarGrupoEncerrado(), defaults: TEXTOS_PADRAO["sabado-grupo-encerrado"] },
 
   // Trilha Ao Vivo — evento ao vivo via YouTube, sempre quarta-feira.
-  // Grupo criado com antecedência (sexta), evento e encerramento na quarta.
+  // Grupo criado com antecedência (sexta), aquecimento segunda/terça,
+  // evento na quarta, pós-evento quinta, encerramento cosmético sexta.
   { chave: "aovivo-criar-grupo", nome: "Ao Vivo — Criar o Grupo", dia: "Sexta-feira", trilha: "ao-vivo", cronPadrao: "0 9 * * 5", executar: () => executarCriarGrupoAoVivo({}), defaults: null },
+  { chave: "aovivo-seja-bem-vindo", nome: "Ao Vivo — Seja Bem Vindo", dia: "Segunda-feira", trilha: "ao-vivo", cronPadrao: "0 20 * * 1", executar: () => executarSejaBemVindoAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-seja-bem-vindo"] },
+  { chave: "aovivo-e-amanha", nome: "Ao Vivo — É Amanhã (enquete EUA)", dia: "Terça-feira", trilha: "ao-vivo", cronPadrao: "0 11 * * 2", executar: () => executarEAmanhaAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-e-amanha"] },
+  { chave: "aovivo-audio-nina", nome: "Ao Vivo — Áudio da Nina", dia: "Terça-feira", trilha: "ao-vivo", cronPadrao: "0 18 * * 2", executar: () => executarAudioNinaAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-audio-nina"] },
   { chave: "aovivo-e-hoje", nome: "Ao Vivo — É Hoje", dia: "Quarta-feira", trilha: "ao-vivo", cronPadrao: "0 11 * * 3", executar: () => executarEHojeAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-e-hoje"] },
   { chave: "aovivo-2-horas", nome: "Ao Vivo — Faltam 2 horas", dia: "Quarta-feira", trilha: "ao-vivo", cronPadrao: "0 18 * * 3", executar: () => executar2HorasAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-2-horas"] },
   { chave: "aovivo-1-hora", nome: "Ao Vivo — Falta 1 hora", dia: "Quarta-feira", trilha: "ao-vivo", cronPadrao: "0 19 * * 3", executar: () => executar1HoraAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-1-hora"] },
@@ -122,6 +134,10 @@ const FLUXOS = [
   { chave: "aovivo-durante-live-20h40", nome: "Ao Vivo — Durante a Live 20h40", dia: "Quarta-feira", trilha: "ao-vivo", cronPadrao: "40 20 * * 3", executar: () => executar20h40AoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-durante-live-20h40"] },
   { chave: "aovivo-durante-live-20h50", nome: "Ao Vivo — Durante a Live 20h50", dia: "Quarta-feira", trilha: "ao-vivo", cronPadrao: "50 20 * * 3", executar: () => executar20h50AoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-durante-live-20h50"] },
   { chave: "aovivo-fim-do-dia", nome: "Ao Vivo — Fim do dia (23h05)", dia: "Quarta-feira", trilha: "ao-vivo", cronPadrao: "5 23 * * 3", executar: () => executarFimDoDiaAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-fim-do-dia"] },
+  { chave: "aovivo-aviso-extensao", nome: "Ao Vivo — Aviso de extensão (manhã)", dia: "Quinta-feira", trilha: "ao-vivo", cronPadrao: "12 10 * * 4", executar: () => executarAvisoExtensaoAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-aviso-extensao"] },
+  { chave: "aovivo-conta-rapida", nome: "Ao Vivo — Conta rápida (tarde)", dia: "Quinta-feira", trilha: "ao-vivo", cronPadrao: "15 15 * * 4", executar: () => executarContaRapidaAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-conta-rapida"] },
+  { chave: "aovivo-ultima-mensagem", nome: "Ao Vivo — Última mensagem (noite)", dia: "Quinta-feira", trilha: "ao-vivo", cronPadrao: "0 19 * * 4", executar: () => executarUltimaMensagemAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-ultima-mensagem"] },
+  { chave: "aovivo-grupo-encerrado", nome: "Ao Vivo — Grupo encerrado (renomeia)", dia: "Sexta-feira", trilha: "ao-vivo", cronPadrao: "15 8 * * 5", executar: () => executarGrupoEncerradoAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-grupo-encerrado"] },
   { chave: "aovivo-checa-lotacao", nome: "Ao Vivo — Checa lotação (a cada 30min)", dia: "Contínuo", trilha: "ao-vivo", cronPadrao: "*/30 * * * *", executar: () => executarChecaLotacaoAoVivo(), defaults: null },
 ];
 
@@ -348,9 +364,9 @@ app.get("/api/grupo-modelo-ao-vivo", (_req, res) => {
 });
 
 app.put("/api/grupo-modelo-ao-vivo", (req, res) => {
-  const { nome, imagemUrl, descricao } = req.body ?? {};
+  const { nome, imagemUrl, descricao, audioUrl } = req.body ?? {};
   if (!nome) return res.status(400).json({ error: "Campo 'nome' é obrigatório." });
-  definirModeloDoGrupoAoVivo({ nome, imagemUrl, descricao });
+  definirModeloDoGrupoAoVivo({ nome, imagemUrl, descricao, audioUrl });
   res.json({ ok: true });
 });
 

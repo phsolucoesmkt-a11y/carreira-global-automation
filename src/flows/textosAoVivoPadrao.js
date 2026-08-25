@@ -3,6 +3,70 @@
 // YouTube no lugar do WebinarJam antigo. Nenhum fluxo do n8n foi alterado.
 
 export const TEXTOS_AO_VIVO_PADRAO = {
+  "aovivo-seja-bem-vindo": {
+    videoUrl: "https://drive.google.com/uc?export=download&id=1O0qQsHXB_0mPEwD_BFfgQxjhACPKqR3C",
+    texto:
+      "Galera, o grande dia está chegando! 🔥\n\n" +
+      "A Nina acabou de mandar esse vídeo aqui embaixo com um recado fundamental para quem quer conquistar o mundo. " +
+      "Nosso Workshop Vagas Internacionais acontece agora, nesta quarta-feira, às 20h!\n\n" +
+      "Se você quer entender o caminho para trabalhar fora ou ganhar em dólar/euro sem sair de casa, não pode perder por nada.\n\n" +
+      "Dá o play no vídeo e responde aqui embaixo na enquete: como está o nível de ansiedade para quarta-feira? 👇",
+    enquetePergunta: "Como está a expectativa para o Workshop Vagas Internacionais? 🚀",
+    enqueteOpcoes: [
+      "Contando os minutos! 🤩",
+      "Ansioso(a) para começar! ✈️",
+      "Vou estar lá com certeza! ✍️",
+      "Quero saber tudo sobre as vagas!",
+    ],
+  },
+
+  "aovivo-e-amanha": {
+    prefixoNome: "🚨🚨📣 É AMANHÃ -  20hrs",
+    pergunta: "Pra trabalhar pra uma empresa americana, você precisa se mudar pra lá?",
+    enquetePergunta: "Responde aí! Mais tarde eu trago a resposta com dados 👇",
+    enqueteOpcoes: [
+      "🟢 Sim, com certeza",
+      "🟡 Pode, mas não precisa",
+      "🔴 Dá pra trabalhar da minha casa pra uma empresa americana",
+    ],
+  },
+
+  "aovivo-audio-nina": {
+    avisoTexto: "Pessoal, olha o audio que a Nina enviou.👇🏻",
+  },
+
+  "aovivo-aviso-extensao": {
+    mensagem:
+      "Bom dia! Passando aqui pra avisar uma coisa que não tava nos planos.\n\n" +
+      "Ontem o workshop lotou. Foi muito maior do que a gente esperava e ficamos muito felizes com isso. Só que por conta disso muita gente teve problema pra acessar, e o suporte amanheceu cheio de mensagem de gente pedindo pra reabrir.\n\n" +
+      "Conversei com a Nina e ela topou manter as condições do workshop abertas por mais um dia pra essas pessoas.\n\n" +
+      "Então se você tentou comprar ontem e não conseguiu, ou se assistiu e ficou na dúvida e hoje acordou querendo, tá aberto até meia-noite de hoje. Depois disso fecha e não volta.\n\n" +
+      "Workshop: {{link}}\nCarreira Global: carreiraglobal.net",
+  },
+
+  "aovivo-conta-rapida": {
+    mensagem:
+      "Deixa eu te fazer uma conta rápida.\n\n" +
+      "Se você continua ganhando em real o que ganha hoje, daqui a 12 meses vai ter ganho exatamente a mesma coisa.\n\n" +
+      "Talvez um reajuste de 5%, 6% que a inflação come antes de chegar na sua conta.\n\n" +
+      "Agora pensa no cenário oposto: daqui a 4 meses você já pode estar posicionado pra vagas internacionais remotas, ganhando em dólar. Quanto vale essa diferença em 1 ano?\n\n" +
+      "O treinamento custa menos que uma parcela de celular.\n\n" +
+      "A parcela custa menos que uma pizza.\n\n" +
+      "As condições do workshop fecham hoje à meia-noite:\ncarreiraglobal.net",
+  },
+
+  "aovivo-ultima-mensagem": {
+    mensagem:
+      "Última mensagem, pessoal.\n\n" +
+      "O link fecha hoje à meia-noite. \nDepois disso fecha e volta pro preço normal, sem os bônus do workshop.\n\n" +
+      "Aula do workshop: {{link}}\nCarreira Global: carreiraglobal.net\n\n" +
+      "Foi um prazer ter vocês conosco essa semana.",
+  },
+
+  "aovivo-grupo-encerrado": {
+    prefixoNome: "Grupo encerrado | Workshop Vagas Internacionais",
+  },
+
   "aovivo-e-hoje": {
     prefixoNome: "🚨🚨📣 É HOJE -  20hrs",
     videoUrl: "https://drive.google.com/uc?export=download&id=1d4tfEw0hoKJ0GMfJ7aWXp8N9ufDyE54Z",

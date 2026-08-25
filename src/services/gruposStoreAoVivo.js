@@ -6,21 +6,21 @@ import { db } from "../db.js";
 export function lerModeloDoGrupoAoVivo() {
   const row = db.prepare(`SELECT * FROM grupo_modelo_ao_vivo WHERE id = 1`).get();
   if (!row) throw new Error("Molde do grupo Ao Vivo ainda não configurado (tabela grupo_modelo_ao_vivo vazia).");
-  return { nome: row.nome, imagem: row.imagem_url, descricao: row.descricao };
+  return { nome: row.nome, imagem: row.imagem_url, descricao: row.descricao, audio: row.audio_url };
 }
 
 export function lerModeloCompletoAoVivo() {
   return db.prepare(`SELECT * FROM grupo_modelo_ao_vivo WHERE id = 1`).get() ?? null;
 }
 
-export function definirModeloDoGrupoAoVivo({ nome, imagemUrl, descricao }) {
+export function definirModeloDoGrupoAoVivo({ nome, imagemUrl, descricao, audioUrl }) {
   db.prepare(
-    `INSERT INTO grupo_modelo_ao_vivo (id, nome, imagem_url, descricao)
-     VALUES (1, ?, ?, ?)
+    `INSERT INTO grupo_modelo_ao_vivo (id, nome, imagem_url, descricao, audio_url)
+     VALUES (1, ?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET
        nome = excluded.nome, imagem_url = excluded.imagem_url,
-       descricao = excluded.descricao, atualizado_em = datetime('now')`
-  ).run(nome, imagemUrl ?? null, descricao ?? null);
+       descricao = excluded.descricao, audio_url = excluded.audio_url, atualizado_em = datetime('now')`
+  ).run(nome, imagemUrl ?? null, descricao ?? null, audioUrl ?? null);
 }
 
 export function gravarResultadoNoModeloAoVivo({ groupId, inviteUrl }) {
@@ -52,6 +52,13 @@ export function atualizarParticipantesDoGrupoAoVivo(id, total) {
   db.prepare(
     `UPDATE arvore_grupos_ao_vivo SET participantes = ?, participantes_atualizado_em = datetime('now') WHERE id = ?`
   ).run(total, id);
+}
+
+// Grupos Inativo encerrados recentemente (últimos 4 dias) — usado pelo
+// fluxo de sexta 08h15 que renomeia pra "Grupo encerrado" o(s) grupo(s)
+// fechado(s) pelo "Fim do dia" de quarta, sem mexer em grupos antigos.
+export function gruposInativosRecentesAoVivo() {
+  return db.prepare(`SELECT * FROM arvore_grupos_ao_vivo WHERE status = 'Inativo' AND atualizado_em >= datetime('now', '-4 days')`).all();
 }
 
 export function marcarGrupoAoVivoInativo(id) {

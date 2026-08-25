@@ -71,6 +71,7 @@ CREATE TABLE IF NOT EXISTS grupo_modelo_ao_vivo (
   nome TEXT NOT NULL,
   imagem_url TEXT,
   descricao TEXT,
+  audio_url TEXT,
   ultimo_group_id TEXT,
   ultimo_invite_url TEXT,
   atualizado_em TEXT NOT NULL DEFAULT (datetime('now'))
@@ -102,6 +103,13 @@ if (!colunas.some((c) => c.name === "participantes")) {
 }
 if (!colunas.some((c) => c.name === "participantes_atualizado_em")) {
   db.exec(`ALTER TABLE arvore_grupos ADD COLUMN participantes_atualizado_em TEXT`);
+}
+
+// Migração: coluna "audio_url" no grupo_modelo_ao_vivo (adicionada depois
+// de descobrir que o Ao Vivo também manda áudio da Nina, na terça).
+const colunasModeloAoVivo = db.prepare(`PRAGMA table_info(grupo_modelo_ao_vivo)`).all();
+if (colunasModeloAoVivo.length > 0 && !colunasModeloAoVivo.some((c) => c.name === "audio_url")) {
+  db.exec(`ALTER TABLE grupo_modelo_ao_vivo ADD COLUMN audio_url TEXT`);
 }
 
 // Migração: coluna "ativo" no fluxos_config (chave liga/desliga por fluxo).
