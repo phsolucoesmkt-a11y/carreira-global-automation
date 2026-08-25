@@ -154,6 +154,34 @@ export const TEXTOS_AO_VIVO_PADRAO = {
       "Pega os minutos finais antes de encerrar 👇\n🔗 {{link}}",
   },
 
+  "aovivo-22h05-encerramento": {
+    mensagem: "Encerramos o Workshop, pessoal.\n\nO link segue aberto até meia noite.\n\ncarreiraglobal.net",
+  },
+
+  "aovivo-13h": {
+    mensagem:
+      "Aproveitando o intervalo pra te lembrar de uma coisa.\n\n" +
+      "O link do workshop fecha hoje à meia-noite.\n\n" +
+      "Se você ficou de fora essa semana ou ainda tá decidindo, ainda dá tempo.\n\n" +
+      "🔗 Aula: {{link}}\n👉 Checkout: carreiraglobal.net",
+  },
+
+  "aovivo-17h": {
+    mensagem:
+      "Fim de tarde, restam poucas horas.\n\n" +
+      "O link fecha hoje à meia-noite e depois disso volta ao preço normal, sem os bônus do workshop.\n\n" +
+      "Não deixa pra última hora.\n\n" +
+      "👉 Checkout: carreiraglobal.net",
+  },
+
+  "aovivo-22h": {
+    mensagem:
+      "Faltam 2 horas.\n\n" +
+      "Meia-noite o link fecha e não reabre com essas condições.\n\n" +
+      "Se você tava esperando o momento certo, é agora.\n\n" +
+      "👉 Checkout: carreiraglobal.net",
+  },
+
   "aovivo-fim-do-dia": {
     mensagem:
       "Última mensagem desse grupo.\n\n\n" +

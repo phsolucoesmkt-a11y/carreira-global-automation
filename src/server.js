@@ -43,8 +43,11 @@ import { executarSejaBemVindoAoVivo } from "./flows/aoVivo/sejaBemVindoAoVivo.js
 import { executarEAmanhaAoVivo, executarAudioNinaAoVivo } from "./flows/aoVivo/enqueteEUAAoVivo.js";
 import {
   executarAvisoExtensaoAoVivo,
+  executar13hAoVivo,
   executarContaRapidaAoVivo,
+  executar17hAoVivo,
   executarUltimaMensagemAoVivo,
+  executar22hAoVivo,
   executarGrupoEncerradoAoVivo,
 } from "./flows/aoVivo/posEventoAoVivo.js";
 import {
@@ -58,6 +61,7 @@ import {
   executar20h30AoVivo,
   executar20h40AoVivo,
   executar20h50AoVivo,
+  executar22h05EncerramentoAoVivo,
   executarFimDoDiaAoVivo,
 } from "./flows/aoVivo/mensagensAoVivo.js";
 import { executarChecaLotacaoAoVivo } from "./flows/aoVivo/checaLotacaoAoVivo.js";
@@ -133,10 +137,14 @@ const FLUXOS = [
   { chave: "aovivo-durante-live-20h30", nome: "Ao Vivo — Durante a Live 20h30", dia: "Quarta-feira", trilha: "ao-vivo", cronPadrao: "30 20 * * 3", executar: () => executar20h30AoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-durante-live-20h30"] },
   { chave: "aovivo-durante-live-20h40", nome: "Ao Vivo — Durante a Live 20h40", dia: "Quarta-feira", trilha: "ao-vivo", cronPadrao: "40 20 * * 3", executar: () => executar20h40AoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-durante-live-20h40"] },
   { chave: "aovivo-durante-live-20h50", nome: "Ao Vivo — Durante a Live 20h50", dia: "Quarta-feira", trilha: "ao-vivo", cronPadrao: "50 20 * * 3", executar: () => executar20h50AoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-durante-live-20h50"] },
+  { chave: "aovivo-22h05-encerramento", nome: "Ao Vivo — Encerramos o Workshop (22h05)", dia: "Quarta-feira", trilha: "ao-vivo", cronPadrao: "5 22 * * 3", executar: () => executar22h05EncerramentoAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-22h05-encerramento"] },
   { chave: "aovivo-fim-do-dia", nome: "Ao Vivo — Fim do dia (23h05)", dia: "Quarta-feira", trilha: "ao-vivo", cronPadrao: "5 23 * * 3", executar: () => executarFimDoDiaAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-fim-do-dia"] },
   { chave: "aovivo-aviso-extensao", nome: "Ao Vivo — Aviso de extensão (manhã)", dia: "Quinta-feira", trilha: "ao-vivo", cronPadrao: "12 10 * * 4", executar: () => executarAvisoExtensaoAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-aviso-extensao"] },
+  { chave: "aovivo-13h", nome: "Ao Vivo — Lembrete 13h", dia: "Quinta-feira", trilha: "ao-vivo", cronPadrao: "0 13 * * 4", executar: () => executar13hAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-13h"] },
   { chave: "aovivo-conta-rapida", nome: "Ao Vivo — Conta rápida (tarde)", dia: "Quinta-feira", trilha: "ao-vivo", cronPadrao: "15 15 * * 4", executar: () => executarContaRapidaAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-conta-rapida"] },
+  { chave: "aovivo-17h", nome: "Ao Vivo — Lembrete 17h", dia: "Quinta-feira", trilha: "ao-vivo", cronPadrao: "0 17 * * 4", executar: () => executar17hAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-17h"] },
   { chave: "aovivo-ultima-mensagem", nome: "Ao Vivo — Última mensagem (noite)", dia: "Quinta-feira", trilha: "ao-vivo", cronPadrao: "0 19 * * 4", executar: () => executarUltimaMensagemAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-ultima-mensagem"] },
+  { chave: "aovivo-22h", nome: "Ao Vivo — Lembrete 22h", dia: "Quinta-feira", trilha: "ao-vivo", cronPadrao: "0 22 * * 4", executar: () => executar22hAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-22h"] },
   { chave: "aovivo-grupo-encerrado", nome: "Ao Vivo — Grupo encerrado (renomeia)", dia: "Sexta-feira", trilha: "ao-vivo", cronPadrao: "15 8 * * 5", executar: () => executarGrupoEncerradoAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-grupo-encerrado"] },
   { chave: "aovivo-checa-lotacao", nome: "Ao Vivo — Checa lotação (a cada 30min)", dia: "Contínuo", trilha: "ao-vivo", cronPadrao: "*/30 * * * *", executar: () => executarChecaLotacaoAoVivo(), defaults: null },
 ];

@@ -38,8 +38,11 @@ async function executarMensagem(chave, log) {
 }
 
 export const executarAvisoExtensaoAoVivo = ({ log = console.log } = {}) => executarMensagem("aovivo-aviso-extensao", log);
+export const executar13hAoVivo = ({ log = console.log } = {}) => executarMensagem("aovivo-13h", log);
 export const executarContaRapidaAoVivo = ({ log = console.log } = {}) => executarMensagem("aovivo-conta-rapida", log);
+export const executar17hAoVivo = ({ log = console.log } = {}) => executarMensagem("aovivo-17h", log);
 export const executarUltimaMensagemAoVivo = ({ log = console.log } = {}) => executarMensagem("aovivo-ultima-mensagem", log);
+export const executar22hAoVivo = ({ log = console.log } = {}) => executarMensagem("aovivo-22h", log);
 
 // Sexta 08h15: renomeia o(s) grupo(s) encerrado(s) recentemente (pelo
 // "Fim do dia" de quarta) pra "Grupo encerrado" — não manda mensagem, só

@@ -88,6 +88,7 @@ export const executar20h20AoVivo = ({ log = console.log } = {}) => executarMensa
 export const executar20h30AoVivo = ({ log = console.log } = {}) => executarMensagem("aovivo-durante-live-20h30", log);
 export const executar20h40AoVivo = ({ log = console.log } = {}) => executarMensagem("aovivo-durante-live-20h40", log);
 export const executar20h50AoVivo = ({ log = console.log } = {}) => executarMensagem("aovivo-durante-live-20h50", log);
+export const executar22h05EncerramentoAoVivo = ({ log = console.log } = {}) => executarMensagem("aovivo-22h05-encerramento", log);
 
 // Última mensagem do dia (23h05): manda o texto e já encerra o(s) grupo(s)
 // ativos — no Ao Vivo não existe extensão pro dia seguinte como no Gravado,
