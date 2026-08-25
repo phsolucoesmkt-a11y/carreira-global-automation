@@ -79,6 +79,12 @@ export async function executar17h({ log = console.log } = {}) {
   return executarMensagemSimples({ chave: "17h", log });
 }
 
+// Aviso de encerramento do workshop, 22h05 — antes da última mensagem do
+// dia (23h05), avisa que o workshop acabou e o link segue aberto até meia-noite.
+export async function executar22h05Encerramento({ log = console.log } = {}) {
+  return executarMensagemSimples({ chave: "22h05-encerramento", log });
+}
+
 // Espelha "23hrs fim do dia": manda a última mensagem do dia. (O passo
 // original que registrava o grupo numa aba de arquivo separada no Sheets
 // não foi replicado — o histórico de execuções deste sistema já cobre

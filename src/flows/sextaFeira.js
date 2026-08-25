@@ -93,6 +93,9 @@ async function executarMensagem(chave, log) {
 // grupo. Cada um vira uma função separada, igual "Durante a Live".
 export const executarUltimaChance = ({ log = console.log } = {}) => executarRenomear("sexta-ultima-chance", log);
 export const executarAvisoExtensao = ({ log = console.log } = {}) => executarMensagem("sexta-aviso-extensao", log);
+export const executarSexta13h = ({ log = console.log } = {}) => executarMensagem("sexta-13h", log);
 export const executarContaRapida = ({ log = console.log } = {}) => executarMensagem("sexta-conta-rapida", log);
+export const executarSexta17h = ({ log = console.log } = {}) => executarMensagem("sexta-17h", log);
 export const executarUltimaMensagem = ({ log = console.log } = {}) => executarMensagem("sexta-ultima-mensagem", log);
+export const executarSexta22h = ({ log = console.log } = {}) => executarMensagem("sexta-22h", log);
 export const executarGrupoEncerrado = ({ log = console.log } = {}) => executarEncerrarGrupo("sabado-grupo-encerrado", log);
