@@ -9,8 +9,10 @@ import { lerCamposDoFluxo, lerConfiguracao } from "../../services/config.js";
 import { LINK_AO_VIVO_PADRAO } from "../../services/linkAoVivo.js";
 import { TEXTOS_AO_VIVO_PADRAO } from "../textosAoVivoPadrao.js";
 
-function montarMensagem(template) {
-  const link = lerConfiguracao("link_ao_vivo", LINK_AO_VIVO_PADRAO);
+// `grupo.link_override`, se definido, sobrescreve o link_ao_vivo global
+// só pra esse grupo específico (usado em testes pontuais).
+function montarMensagem(template, grupo) {
+  const link = grupo?.link_override || lerConfiguracao("link_ao_vivo", LINK_AO_VIVO_PADRAO);
   return template.replaceAll("{{link}}", link);
 }
 
@@ -56,7 +58,6 @@ async function executarMensagem(chave, log, { renomear = false } = {}) {
   const modelo = renomear ? lerModeloDoGrupoAoVivo() : null;
   const nomeBase = modelo ? modelo.nome.replace(/^[^\wÀ-ÿ]+/u, "").trim() : null;
   const novoNome = renomear ? `${campos.prefixoNome} | ${nomeBase}` : null;
-  const mensagem = campos.mensagem ? montarMensagem(campos.mensagem) : null;
 
   const passos = [];
   const registrar = (passo, dados) => {
@@ -70,9 +71,10 @@ async function executarMensagem(chave, log, { renomear = false } = {}) {
       await atualizarNomeDoGrupo({ groupJid: grupo.id, nome: novoNome });
       registrar(`2. Nome do grupo atualizado (${grupo.nome ?? grupo.id})`, { novoNome });
     }
-    if (mensagem) {
+    if (campos.mensagem) {
+      const mensagem = montarMensagem(campos.mensagem, grupo);
       await enviarTexto({ remoteJid: grupo.id, texto: mensagem });
-      registrar(`${renomear ? "3" : "2"}. Mensagem enviada (${grupo.nome ?? grupo.id})`);
+      registrar(`${renomear ? "3" : "2"}. Mensagem enviada (${grupo.nome ?? grupo.id})`, grupo.link_override ? { linkUsado: "override" } : undefined);
     }
   }
 
@@ -95,7 +97,6 @@ export const executar22h05EncerramentoAoVivo = ({ log = console.log } = {}) => e
 // o evento é só naquele dia.
 export async function executarFimDoDiaAoVivo({ log = console.log } = {}) {
   const campos = lerCamposDoFluxo("aovivo-fim-do-dia", TEXTOS_AO_VIVO_PADRAO["aovivo-fim-do-dia"]);
-  const mensagem = montarMensagem(campos.mensagem);
   const grupos = gruposAtivosAoVivo();
 
   const passos = [];
@@ -106,6 +107,7 @@ export async function executarFimDoDiaAoVivo({ log = console.log } = {}) {
   registrar("1. Grupos ativos encontrados", { total: grupos.length });
 
   for (const grupo of grupos) {
+    const mensagem = montarMensagem(campos.mensagem, grupo);
     await enviarTexto({ remoteJid: grupo.id, texto: mensagem });
     marcarGrupoAoVivoInativo(grupo.id);
     registrar(`2. Mensagem enviada e grupo encerrado (${grupo.nome ?? grupo.id})`);

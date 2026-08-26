@@ -12,14 +12,15 @@ import { TEXTOS_AO_VIVO_PADRAO } from "../textosAoVivoPadrao.js";
 // nunca disparavam de verdade) — não replicados aqui por não fazerem
 // parte do fluxo real.
 
-function montarMensagem(template) {
-  const link = lerConfiguracao("link_ao_vivo", LINK_AO_VIVO_PADRAO);
+// `grupo.link_override`, se definido, sobrescreve o link_ao_vivo global
+// só pra esse grupo específico (usado em testes pontuais).
+function montarMensagem(template, grupo) {
+  const link = grupo?.link_override || lerConfiguracao("link_ao_vivo", LINK_AO_VIVO_PADRAO);
   return template.replaceAll("{{link}}", link);
 }
 
 async function executarMensagem(chave, log) {
   const campos = lerCamposDoFluxo(chave, TEXTOS_AO_VIVO_PADRAO[chave]);
-  const mensagem = montarMensagem(campos.mensagem);
   const grupos = gruposAtivosAoVivo();
 
   const passos = [];
@@ -30,8 +31,9 @@ async function executarMensagem(chave, log) {
   registrar("1. Grupos ativos encontrados", { total: grupos.length });
 
   for (const grupo of grupos) {
+    const mensagem = montarMensagem(campos.mensagem, grupo);
     await enviarTexto({ remoteJid: grupo.id, texto: mensagem });
-    registrar(`2. Mensagem enviada (${grupo.nome ?? grupo.id})`);
+    registrar(`2. Mensagem enviada (${grupo.nome ?? grupo.id})`, grupo.link_override ? { linkUsado: "override" } : undefined);
   }
 
   return { totalGrupos: grupos.length, passos };

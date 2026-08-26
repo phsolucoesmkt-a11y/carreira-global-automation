@@ -83,6 +83,13 @@ export function promoverGruposPendentesAoVivo() {
   return pendentes;
 }
 
+// Link específico pra esse grupo (sobrescreve o link_ao_vivo global só
+// pra ele) — usado pra testes pontuais sem afetar os outros grupos.
+// Passar null/vazio remove a exceção e volta a usar o link padrão.
+export function definirLinkOverrideAoVivo(id, link) {
+  db.prepare(`UPDATE arvore_grupos_ao_vivo SET link_override = ? WHERE id = ?`).run(link || null, id);
+}
+
 // Já existe um grupo criado por causa da lotação DESTE grupo específico?
 // Evita criar um segundo grupo extra do mesmo transbordamento a cada
 // checagem de 30 em 30 minutos.

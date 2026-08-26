@@ -452,6 +452,7 @@ function renderCardGrupo(g, trilha) {
             ${g.participantes != null ? `${g.participantes} participante${g.participantes === 1 ? '' : 's'}` : 'Participantes ainda não conferidos'}
             ${g.participantes_atualizado_em ? ` · atualizado em ${fmtData(g.participantes_atualizado_em)}` : ''}
           </div>
+          ${isLive && g.link_override ? `<div class="muted" style="margin-top:6px;color:var(--aovivo)">Link exclusivo neste grupo: ${g.link_override}</div>` : ''}
         </div>
         <div style="text-align:right">
           ${badge(g.status)}
@@ -460,6 +461,8 @@ function renderCardGrupo(g, trilha) {
             ${g.status !== 'Ativo' ? `<button class="small secondary" data-mudar-status="${g.id}" data-novo-status="Ativo" data-trilha="${trilha}">Marcar Ativo</button>` : ''}
             ${g.status !== 'Pendente' ? `<button class="small secondary" data-mudar-status="${g.id}" data-novo-status="Pendente" data-trilha="${trilha}">Marcar Pendente</button>` : ''}
             ${g.status !== 'Inativo' ? `<button class="small danger" data-mudar-status="${g.id}" data-novo-status="Inativo" data-trilha="${trilha}">Marcar Inativo</button>` : ''}
+            ${isLive ? `<button class="small secondary" data-link-override="${g.id}">${g.link_override ? 'Trocar link exclusivo' : 'Usar link diferente'}</button>` : ''}
+            ${isLive && g.link_override ? `<button class="small secondary" data-limpar-link-override="${g.id}">Remover link exclusivo</button>` : ''}
           </div>
         </div>
       </div>
@@ -676,6 +679,47 @@ function attachHandlers() {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status }),
+        });
+        await carregarTudo();
+        render();
+      } catch (e) {
+        alert(`Erro: ${e.message}`);
+        btn.disabled = false;
+      }
+    });
+  });
+
+  document.querySelectorAll('[data-link-override]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.linkOverride;
+      const link = prompt('Link exclusivo pra este grupo (deixe em branco pra cancelar):');
+      if (link === null || link.trim() === '') return;
+      btn.disabled = true;
+      try {
+        await api(`/api/arvore-grupos-ao-vivo/${encodeURIComponent(id)}/link-override`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ link: link.trim() }),
+        });
+        await carregarTudo();
+        render();
+      } catch (e) {
+        alert(`Erro: ${e.message}`);
+        btn.disabled = false;
+      }
+    });
+  });
+
+  document.querySelectorAll('[data-limpar-link-override]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.limparLinkOverride;
+      if (!confirm('Remover o link exclusivo deste grupo? Ele volta a usar o link padrão do Ao Vivo.')) return;
+      btn.disabled = true;
+      try {
+        await api(`/api/arvore-grupos-ao-vivo/${encodeURIComponent(id)}/link-override`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ link: null }),
         });
         await carregarTudo();
         render();

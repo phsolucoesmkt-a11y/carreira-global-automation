@@ -73,6 +73,7 @@ import {
   buscarGrupoAoVivoPorId,
   atualizarParticipantesDoGrupoAoVivo,
   adicionarNaArvoreDeGruposAoVivo,
+  definirLinkOverrideAoVivo,
 } from "./services/gruposStoreAoVivo.js";
 import { LINK_AO_VIVO_PADRAO } from "./services/linkAoVivo.js";
 
@@ -400,6 +401,14 @@ app.put("/api/arvore-grupos-ao-vivo/:id/status", (req, res) => {
     return res.status(400).json({ error: "Campo 'status' precisa ser Ativo, Pendente ou Inativo." });
   }
   adicionarNaArvoreDeGruposAoVivo({ groupId: grupo.id, nome: grupo.nome, link: grupo.link, status });
+  res.json({ ok: true });
+});
+
+app.put("/api/arvore-grupos-ao-vivo/:id/link-override", (req, res) => {
+  const grupo = buscarGrupoAoVivoPorId(req.params.id);
+  if (!grupo) return res.status(404).json({ error: "Grupo não encontrado." });
+  const { link } = req.body ?? {};
+  definirLinkOverrideAoVivo(req.params.id, link);
   res.json({ ok: true });
 });
 

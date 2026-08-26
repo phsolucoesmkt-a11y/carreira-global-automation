@@ -112,6 +112,14 @@ if (colunasModeloAoVivo.length > 0 && !colunasModeloAoVivo.some((c) => c.name ==
   db.exec(`ALTER TABLE grupo_modelo_ao_vivo ADD COLUMN audio_url TEXT`);
 }
 
+// Migração: coluna "link_override" no arvore_grupos_ao_vivo — permite
+// definir um link diferente do padrão (link_ao_vivo) só pra um grupo
+// específico, sem afetar os outros. Usado pra testes pontuais.
+const colunasAoVivo = db.prepare(`PRAGMA table_info(arvore_grupos_ao_vivo)`).all();
+if (colunasAoVivo.length > 0 && !colunasAoVivo.some((c) => c.name === "link_override")) {
+  db.exec(`ALTER TABLE arvore_grupos_ao_vivo ADD COLUMN link_override TEXT`);
+}
+
 // Migração: coluna "ativo" no fluxos_config (chave liga/desliga por fluxo).
 const colunasFluxos = db.prepare(`PRAGMA table_info(fluxos_config)`).all();
 if (!colunasFluxos.some((c) => c.name === "ativo")) {
