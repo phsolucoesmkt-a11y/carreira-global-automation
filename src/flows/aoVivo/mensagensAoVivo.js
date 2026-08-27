@@ -1,10 +1,5 @@
 import { atualizarNomeDoGrupo, enviarTexto, enviarVideo } from "../../services/evolution.js";
-import {
-  gruposAtivosAoVivo,
-  lerModeloDoGrupoAoVivo,
-  marcarGrupoAoVivoInativo,
-  promoverGruposPendentesAoVivo,
-} from "../../services/gruposStoreAoVivo.js";
+import { gruposAtivosAoVivo, lerModeloDoGrupoAoVivo } from "../../services/gruposStoreAoVivo.js";
 import { lerCamposDoFluxo, lerConfiguracao } from "../../services/config.js";
 import { LINK_AO_VIVO_PADRAO } from "../../services/linkAoVivo.js";
 import { TEXTOS_AO_VIVO_PADRAO } from "../textosAoVivoPadrao.js";
@@ -92,9 +87,11 @@ export const executar20h40AoVivo = ({ log = console.log } = {}) => executarMensa
 export const executar20h50AoVivo = ({ log = console.log } = {}) => executarMensagem("aovivo-durante-live-20h50", log);
 export const executar22h05EncerramentoAoVivo = ({ log = console.log } = {}) => executarMensagem("aovivo-22h05-encerramento", log);
 
-// Última mensagem do dia (23h05): manda o texto e já encerra o(s) grupo(s)
-// ativos — no Ao Vivo não existe extensão pro dia seguinte como no Gravado,
-// o evento é só naquele dia.
+// Última mensagem do dia (23h05): só manda o texto — igual o "23h fim do
+// dia" do Gravado, o grupo continua Ativo até a quinta inteira (aviso de
+// extensão, lembretes de 13h/17h/22h etc. dependem disso). Quem encerra de
+// verdade o grupo é o "Grupo encerrado" de sexta de manhã (espelhando o
+// "sábado grupo encerrado" do Gravado, um dia depois do último lembrete).
 export async function executarFimDoDiaAoVivo({ log = console.log } = {}) {
   const campos = lerCamposDoFluxo("aovivo-fim-do-dia", TEXTOS_AO_VIVO_PADRAO["aovivo-fim-do-dia"]);
   const grupos = gruposAtivosAoVivo();
@@ -109,13 +106,7 @@ export async function executarFimDoDiaAoVivo({ log = console.log } = {}) {
   for (const grupo of grupos) {
     const mensagem = montarMensagem(campos.mensagem, grupo);
     await enviarTexto({ remoteJid: grupo.id, texto: mensagem });
-    marcarGrupoAoVivoInativo(grupo.id);
-    registrar(`2. Mensagem enviada e grupo encerrado (${grupo.nome ?? grupo.id})`);
-  }
-
-  const promovidos = promoverGruposPendentesAoVivo();
-  if (promovidos.length > 0) {
-    registrar("3. Grupo(s) Pendente(s) promovido(s) a Ativo", { grupos: promovidos.map((g) => g.nome ?? g.id) });
+    registrar(`2. Mensagem enviada (${grupo.nome ?? grupo.id})`);
   }
 
   return { totalGrupos: grupos.length, passos };
