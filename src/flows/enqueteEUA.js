@@ -2,6 +2,7 @@ import { atualizarNomeDoGrupo, enviarTexto, enviarEnquete, enviarAudio } from ".
 import { db } from "../db.js";
 import { lerModeloDoGrupo } from "../services/gruposStore.js";
 import { lerCamposDoFluxo } from "../services/config.js";
+import { dataDoWorkshopGravado } from "../services/dataWorkshop.js";
 import { TEXTOS_PADRAO } from "./textosPadrao.js";
 
 const DEFAULTS_E_AMANHA = TEXTOS_PADRAO["e-amanha"];
@@ -19,7 +20,7 @@ export async function executarEAmanha({ log = console.log } = {}) {
   const grupos = gruposAtivos();
   const modelo = lerModeloDoGrupo();
   const nomeBase = modelo.nome.replace(/^[^\wÀ-ÿ]+/u, "").trim(); // tira o emoji da frente
-  const novoNome = `${campos.prefixoNome} | ${nomeBase}`;
+  const novoNome = `${campos.prefixoNome} | ${nomeBase} - ${dataDoWorkshopGravado()}`;
 
   const passos = [];
   const registrar = (passo, dados) => {

@@ -1,6 +1,7 @@
 import { atualizarNomeDoGrupo, enviarTexto, enviarEnquete, enviarAudio } from "../../services/evolution.js";
 import { gruposAtivosAoVivo, lerModeloDoGrupoAoVivo } from "../../services/gruposStoreAoVivo.js";
 import { lerCamposDoFluxo } from "../../services/config.js";
+import { dataDoWorkshopAoVivo } from "../../services/dataWorkshop.js";
 import { TEXTOS_AO_VIVO_PADRAO } from "../textosAoVivoPadrao.js";
 
 const DEFAULTS_E_AMANHA = TEXTOS_AO_VIVO_PADRAO["aovivo-e-amanha"];
@@ -15,7 +16,7 @@ export async function executarEAmanhaAoVivo({ log = console.log } = {}) {
   const grupos = gruposAtivosAoVivo();
   const modelo = lerModeloDoGrupoAoVivo();
   const nomeBase = modelo.nome.replace(/^[^\wÀ-ÿ]+/u, "").trim();
-  const novoNome = `${campos.prefixoNome} | ${nomeBase}`;
+  const novoNome = `${campos.prefixoNome} | ${nomeBase} - ${dataDoWorkshopAoVivo()}`;
 
   const passos = [];
   const registrar = (passo, dados) => {

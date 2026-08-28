@@ -2,6 +2,7 @@ import { atualizarNomeDoGrupo, enviarTexto, enviarVideo } from "../../services/e
 import { gruposAtivosAoVivo, lerModeloDoGrupoAoVivo } from "../../services/gruposStoreAoVivo.js";
 import { lerCamposDoFluxo, lerConfiguracao } from "../../services/config.js";
 import { LINK_AO_VIVO_PADRAO } from "../../services/linkAoVivo.js";
+import { dataDoWorkshopAoVivo } from "../../services/dataWorkshop.js";
 import { TEXTOS_AO_VIVO_PADRAO } from "../textosAoVivoPadrao.js";
 
 // `grupo.link_override`, se definido, sobrescreve o link_ao_vivo global
@@ -20,7 +21,7 @@ export async function executarEHojeAoVivo({ log = console.log, esperaMs = 60_000
   const grupos = gruposAtivosAoVivo();
   const modelo = lerModeloDoGrupoAoVivo();
   const nomeBase = modelo.nome.replace(/^[^\wÀ-ÿ]+/u, "").trim();
-  const novoNome = `${campos.prefixoNome} | ${nomeBase}`;
+  const novoNome = `${campos.prefixoNome} | ${nomeBase} - ${dataDoWorkshopAoVivo()}`;
 
   const passos = [];
   const registrar = (passo, dados) => {
@@ -52,7 +53,7 @@ async function executarMensagem(chave, log, { renomear = false } = {}) {
   const grupos = gruposAtivosAoVivo();
   const modelo = renomear ? lerModeloDoGrupoAoVivo() : null;
   const nomeBase = modelo ? modelo.nome.replace(/^[^\wÀ-ÿ]+/u, "").trim() : null;
-  const novoNome = renomear ? `${campos.prefixoNome} | ${nomeBase}` : null;
+  const novoNome = renomear ? `${campos.prefixoNome} | ${nomeBase} - ${dataDoWorkshopAoVivo()}` : null;
 
   const passos = [];
   const registrar = (passo, dados) => {

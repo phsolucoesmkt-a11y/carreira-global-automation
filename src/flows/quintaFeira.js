@@ -3,6 +3,7 @@ import { db } from "../db.js";
 import { lerModeloDoGrupo } from "../services/gruposStore.js";
 import { lerCamposDoFluxo, lerConfiguracao } from "../services/config.js";
 import { LINK_DA_LIVE_PADRAO } from "../services/linkDaLive.js";
+import { dataDoWorkshopGravado } from "../services/dataWorkshop.js";
 import { TEXTOS_PADRAO } from "./textosPadrao.js";
 
 function gruposAtivos() {
@@ -23,7 +24,7 @@ export async function executarEHoje({ log = console.log, esperaMs = 60_000 } = {
   const grupos = gruposAtivos();
   const modelo = lerModeloDoGrupo();
   const nomeBase = modelo.nome.replace(/^[^\wÀ-ÿ]+/u, "").trim();
-  const novoNome = `${campos.prefixoNome} | ${nomeBase}`;
+  const novoNome = `${campos.prefixoNome} | ${nomeBase} - ${dataDoWorkshopGravado()}`;
 
   const passos = [];
   const registrar = (passo, dados) => {

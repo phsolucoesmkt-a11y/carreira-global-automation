@@ -3,6 +3,7 @@ import { db } from "../db.js";
 import { lerModeloDoGrupo } from "../services/gruposStore.js";
 import { lerCamposDoFluxo, lerConfiguracao } from "../services/config.js";
 import { LINK_DA_LIVE_PADRAO } from "../services/linkDaLive.js";
+import { dataDoWorkshopGravado } from "../services/dataWorkshop.js";
 import { TEXTOS_PADRAO } from "./textosPadrao.js";
 
 function gruposAtivos() {
@@ -30,7 +31,7 @@ async function executarEtapa({ chave, defaults, log }) {
   const mensagem = montarMensagem(template);
   const grupos = gruposAtivos();
   const nomeBase = nomeBaseDoGrupo();
-  const novoNome = `${prefixoNome} | ${nomeBase}`;
+  const novoNome = `${prefixoNome} | ${nomeBase} - ${dataDoWorkshopGravado()}`;
 
   const passos = [];
   const registrar = (passo, dados) => {
