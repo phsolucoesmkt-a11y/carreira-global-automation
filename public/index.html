@@ -12,6 +12,7 @@
     --text: #eef0f4; --muted: #9298ab; --faint: #575e73;
     --gravado: #8b8ff8; --gravado-dim: rgba(139,143,248,0.13); --gravado-grad: linear-gradient(135deg, #9498f9, #6b6ef0);
     --aovivo: #fb5f6a; --aovivo-dim: rgba(251,95,106,0.13); --aovivo-grad: linear-gradient(135deg, #fd7078, #f0424f);
+    --interno: #8890a4; --interno-dim: rgba(136,144,164,0.16); --interno-grad: linear-gradient(135deg, #9aa2b4, #6b7286);
     --ok: #3ddc97; --ok-dim: rgba(61,220,151,0.13);
     --warn: #f5c04a; --warn-dim: rgba(245,192,74,0.13);
     --err: #f2555f; --err-dim: rgba(242,85,95,0.13);
@@ -65,6 +66,7 @@
   .track-dot { display: inline-block; width: 7px; height: 7px; border-radius: 999px; margin-right: 6px; vertical-align: middle; }
   .track-dot.gravado { background: var(--gravado); box-shadow: 0 0 6px var(--gravado); }
   .track-dot.ao-vivo { background: var(--aovivo); box-shadow: 0 0 6px var(--aovivo); }
+  .track-dot.interno { background: var(--interno); box-shadow: 0 0 6px var(--interno); }
   .track-toggle { display: inline-flex; gap: 2px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; padding: 3px; margin-bottom: 22px; }
   .track-toggle button {
     background: transparent; border: none; color: var(--muted); font-size: 12.5px; font-weight: 600;
@@ -72,6 +74,7 @@
   }
   .track-toggle button.active.gravado { background: var(--gravado-dim); color: var(--gravado); }
   .track-toggle button.active.ao-vivo { background: var(--aovivo-dim); color: var(--aovivo); }
+  .track-toggle button.active.interno { background: var(--interno-dim); color: var(--interno); }
 
   /* ---------- Cards ---------- */
   .card {
@@ -79,6 +82,7 @@
     padding: 16px 18px; margin-bottom: 10px; transition: border-color 0.15s;
   }
   .card.track-gravado { border-left: 3px solid var(--gravado); }
+  .card.track-interno { border-left: 3px dashed var(--interno); }
   .card.track-ao-vivo { border-left: 3px solid var(--aovivo); }
   .card-title { font-weight: 600; font-size: 14px; letter-spacing: -0.005em; }
   .row { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
@@ -224,11 +228,12 @@ function badge(status) {
 }
 
 function trackLabel(trilha) {
-  return trilha === 'ao-vivo' ? 'Ao Vivo' : 'Gravado';
+  return trilha === 'ao-vivo' ? 'Ao Vivo' : trilha === 'interno' ? 'Interno' : 'Gravado';
 }
 
 function trackDot(trilha) {
-  return `<span class="track-dot ${trilha === 'ao-vivo' ? 'ao-vivo' : 'gravado'}"></span>`;
+  const cls = trilha === 'ao-vivo' ? 'ao-vivo' : trilha === 'interno' ? 'interno' : 'gravado';
+  return `<span class="track-dot ${cls}"></span>`;
 }
 
 function fmtData(iso) {
@@ -317,6 +322,7 @@ function campoLabel(chave) {
     videoUrl: 'URL do vídeo', texto: 'Texto da mensagem', mensagem: 'Texto da mensagem',
     pergunta: 'Pergunta', avisoTexto: 'Texto do aviso', prefixoNome: 'Novo nome do grupo (prefixo)',
     enquetePergunta: 'Pergunta da enquete', enqueteOpcoes: 'Opções da enquete (uma por linha)',
+    mensagemLink: 'Mensagem com o link', mensagemCobranca: 'Mensagem de cobrança (5min depois)',
   };
   return nomes[chave] || chave;
 }
@@ -336,7 +342,7 @@ function renderEdicaoFluxo(f) {
   if (state.editando !== f.chave) return '';
   const campos = state.editandoCampos || {};
   return `
-    <div class="card" style="margin-top:10px;border-color:${f.trilha === 'ao-vivo' ? 'var(--aovivo)' : 'var(--gravado)'}">
+    <div class="card" style="margin-top:10px;border-color:${f.trilha === 'ao-vivo' ? 'var(--aovivo)' : f.trilha === 'interno' ? 'var(--interno)' : 'var(--gravado)'}">
       <form id="form-editar-fluxo" data-chave="${f.chave}">
         ${Object.entries(campos).map(([k, v]) => renderCampoInput(k, v)).join('')}
         <div>
@@ -355,8 +361,9 @@ function renderEdicaoFluxo(f) {
 
 function renderCardFluxo(f) {
   const isLive = f.trilha === 'ao-vivo';
+  const trackClass = f.trilha === 'interno' ? 'interno' : isLive ? 'ao-vivo' : 'gravado';
   return `
-    <div class="card track-${isLive ? 'ao-vivo' : 'gravado'}">
+    <div class="card track-${trackClass}">
       <div class="row top">
         <div>
           <div class="card-title">${f.nome}</div>
@@ -378,12 +385,13 @@ function renderCardFluxo(f) {
   `;
 }
 
-function renderTrackToggle(stateKey) {
+function renderTrackToggle(stateKey, { comInterno = false } = {}) {
   const atual = state[stateKey];
   return `
     <div class="track-toggle">
       <button type="button" class="${atual === 'gravado' ? 'active gravado' : ''}" data-set-trilha="${stateKey}" data-trilha-valor="gravado">${trackDot('gravado')}Gravado</button>
       <button type="button" class="${atual === 'ao-vivo' ? 'active ao-vivo' : ''}" data-set-trilha="${stateKey}" data-trilha-valor="ao-vivo">${trackDot('ao-vivo')}Ao Vivo</button>
+      ${comInterno ? `<button type="button" class="${atual === 'interno' ? 'active interno' : ''}" data-set-trilha="${stateKey}" data-trilha-valor="interno">${trackDot('interno')}Interno</button>` : ''}
     </div>
   `;
 }
@@ -401,7 +409,7 @@ function renderFluxos() {
     <div class="page-header">
       <div><h1 class="page-title">Fluxos</h1><div class="page-sub">Fluxos automatizados da trilha selecionada, na ordem em que rodam durante a semana</div></div>
     </div>
-    ${renderTrackToggle('trilhaFluxos')}
+    ${renderTrackToggle('trilhaFluxos', { comInterno: true })}
     ${blocos || '<div class="empty">Nenhum fluxo nessa trilha.</div>'}
   `;
 }

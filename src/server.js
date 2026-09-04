@@ -77,6 +77,10 @@ import {
 } from "./services/gruposStoreAoVivo.js";
 import { LINK_AO_VIVO_PADRAO } from "./services/linkAoVivo.js";
 
+// Trilha Interno — grupo fixo da equipe, nunca um grupo de lead.
+import { executarLinkAoVivoNina } from "./flows/interno/linkAoVivoNina.js";
+import { TEXTOS_INTERNO_PADRAO } from "./flows/textosInternoPadrao.js";
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(express.json());
@@ -148,6 +152,7 @@ const FLUXOS = [
   { chave: "aovivo-22h", nome: "Ao Vivo — Lembrete 22h", dia: "Quinta-feira", trilha: "ao-vivo", cronPadrao: "0 22 * * 4", executar: () => executar22hAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-22h"] },
   { chave: "aovivo-grupo-encerrado", nome: "Ao Vivo — Grupo encerrado (renomeia)", dia: "Sexta-feira", trilha: "ao-vivo", cronPadrao: "15 8 * * 5", executar: () => executarGrupoEncerradoAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-grupo-encerrado"] },
   { chave: "aovivo-checa-lotacao", nome: "Ao Vivo — Checa lotação (a cada 30min)", dia: "Contínuo", trilha: "ao-vivo", cronPadrao: "*/30 * * * *", executar: () => executarChecaLotacaoAoVivo(), defaults: null },
+  { chave: "interno-link-ao-vivo", nome: "Interno — Link Ao Vivo + Cobrança Nina", dia: "Sexta-feira", trilha: "interno", cronPadrao: "0 16 * * 5", executar: () => executarLinkAoVivoNina(), defaults: TEXTOS_INTERNO_PADRAO["interno-link-ao-vivo"] },
 ];
 
 async function executarFluxo(fluxo, origem) {
