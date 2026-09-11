@@ -29,7 +29,7 @@ import {
   executarGarantindoVaga,
 } from "./flows/duranteALive.js";
 import { TEXTOS_PADRAO } from "./flows/textosPadrao.js";
-import { lerModeloCompleto, definirModeloDoGrupo, listarArvoreDeGrupos, buscarGrupoPorId, atualizarParticipantesDoGrupo, adicionarNaArvoreDeGrupos } from "./services/gruposStore.js";
+import { lerModeloCompleto, definirModeloDoGrupo, listarArvoreDeGrupos, buscarGrupoPorId, atualizarParticipantesDoGrupo, adicionarNaArvoreDeGrupos, grupoVigente } from "./services/gruposStore.js";
 import { buscarParticipantesDoGrupo } from "./services/evolution.js";
 import { registrarExecucao, listarExecucoes, ultimaExecucaoPorFluxo } from "./services/execucoes.js";
 import { createSessionToken, verifySessionToken, parseCookies } from "./services/session.js";
@@ -195,14 +195,25 @@ for (const fluxo of FLUXOS) agendarFluxo(fluxo);
 
 // Redirect público pro tráfego pago (Google/Meta Ads apontam pra cá em vez
 // de pra planilha do Google Sheets do fluxo antigo em n8n). Sempre manda
-// pro grupo Ao Vivo vigente — some sozinho quando o grupo lota e um novo
-// é criado, sem precisar trocar link em nenhum lugar manualmente. Sem
-// autenticação de propósito: é a URL pública que fica no anúncio.
+// pro grupo vigente de cada trilha — troca sozinho quando o grupo atual é
+// substituído (lotação no Ao Vivo, ou virada de semana no Gravado), sem
+// precisar trocar link em nenhum lugar manualmente. Sem autenticação de
+// propósito: é a URL pública que fica no anúncio.
 app.get("/r/ao-vivo", (_req, res) => {
   const grupo = grupoAoVivoVigente();
   if (!grupo || !grupo.link) {
     console.error("[redirect] /r/ao-vivo sem grupo Ativo com link — não deu pra redirecionar");
     res.status(503).send("Estamos preparando o grupo do Workshop Ao Vivo. Tente novamente em alguns minutos.");
+    return;
+  }
+  res.redirect(302, grupo.link);
+});
+
+app.get("/r/gravado", (_req, res) => {
+  const grupo = grupoVigente();
+  if (!grupo || !grupo.link) {
+    console.error("[redirect] /r/gravado sem grupo Ativo com link — não deu pra redirecionar");
+    res.status(503).send("Estamos preparando o grupo do Workshop. Tente novamente em alguns minutos.");
     return;
   }
   res.redirect(302, grupo.link);

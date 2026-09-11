@@ -58,6 +58,15 @@ export function existeGrupoAtivo() {
   return !!db.prepare(`SELECT 1 FROM arvore_grupos WHERE status = 'Ativo' LIMIT 1`).get();
 }
 
+// Grupo Ativo "vigente" pra redirecionar tráfego novo (espelha
+// grupoAoVivoVigente do Ao Vivo). O Gravado não tem lotação/overflow, só
+// um Ativo por vez normalmente, mas pega o mais recente por segurança.
+export function grupoVigente() {
+  const grupos = db.prepare(`SELECT * FROM arvore_grupos WHERE status = 'Ativo'`).all();
+  if (grupos.length === 0) return null;
+  return grupos.reduce((mais, atual) => (atual.criado_em > mais.criado_em ? atual : mais));
+}
+
 // Promove o(s) grupo(s) pendente(s) pra Ativo — chamado quando o grupo
 // atual é encerrado, pra destravar os disparos no grupo que já estava
 // esperando. Retorna os grupos promovidos.
