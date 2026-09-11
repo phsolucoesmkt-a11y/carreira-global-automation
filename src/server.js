@@ -209,10 +209,10 @@ app.get("/r/ao-vivo", (_req, res) => {
   res.redirect(302, grupo.link);
 });
 
-app.get("/r/gravado", (_req, res) => {
+app.get("/r/ao-vivo-2", (_req, res) => {
   const grupo = grupoVigente();
   if (!grupo || !grupo.link) {
-    console.error("[redirect] /r/gravado sem grupo Ativo com link — não deu pra redirecionar");
+    console.error("[redirect] /r/ao-vivo-2 sem grupo Ativo com link — não deu pra redirecionar");
     res.status(503).send("Estamos preparando o grupo do Workshop. Tente novamente em alguns minutos.");
     return;
   }
