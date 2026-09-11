@@ -48,6 +48,16 @@ export function gruposAtivosAoVivo() {
   return db.prepare(`SELECT * FROM arvore_grupos_ao_vivo WHERE status = 'Ativo'`).all();
 }
 
+// Grupo Ativo "vigente" pra redirecionar tráfego novo: se a lotação criou
+// um grupo extra e os dois estão Ativos (ambos continuam recebendo as
+// mensagens automáticas do funil), o vigente é sempre o mais recente —
+// ele só é criado quando o anterior já lotou, então é o único com vaga.
+export function grupoAoVivoVigente() {
+  const grupos = gruposAtivosAoVivo();
+  if (grupos.length === 0) return null;
+  return grupos.reduce((mais, atual) => (atual.criado_em > mais.criado_em ? atual : mais));
+}
+
 export function atualizarParticipantesDoGrupoAoVivo(id, total) {
   db.prepare(
     `UPDATE arvore_grupos_ao_vivo SET participantes = ?, participantes_atualizado_em = datetime('now') WHERE id = ?`

@@ -1,18 +1,10 @@
 import { enviarTexto } from "../../services/evolution.js";
-import { gruposAtivosAoVivo } from "../../services/gruposStoreAoVivo.js";
+import { grupoAoVivoVigente } from "../../services/gruposStoreAoVivo.js";
 import { GRUPO_INTERNO_NINA_JID } from "../../services/grupoInterno.js";
 import { lerCamposDoFluxo } from "../../services/config.js";
 import { TEXTOS_INTERNO_PADRAO } from "../textosInternoPadrao.js";
 
 const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-// Grupo Ao Vivo Ativo mais recente — se a lotação tiver criado um grupo
-// extra e os dois estiverem Ativos, usa o mais novo (link mais fresco).
-function grupoAoVivoMaisRecente() {
-  const grupos = gruposAtivosAoVivo();
-  if (grupos.length === 0) return null;
-  return grupos.reduce((mais, atual) => (atual.criado_em > mais.criado_em ? atual : mais));
-}
 
 // Espelha o fluxo interno "Sexta 16h": manda o link do grupo Ao Vivo pro
 // grupo interno da equipe, espera 5min, cobra a Nina pelo link da próxima
@@ -27,7 +19,7 @@ export async function executarLinkAoVivoNina({ log = console.log, esperaMs = 5 *
     log(`[interno-link-ao-vivo] ${passo}`, dados ?? "");
   };
 
-  const grupo = grupoAoVivoMaisRecente();
+  const grupo = grupoAoVivoVigente();
   if (!grupo || !grupo.link) {
     registrar("1. Nenhum grupo Ao Vivo Ativo com link registrado — nada enviado", { grupoEncontrado: !!grupo });
     return { totalGrupos: 0, passos };

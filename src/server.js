@@ -74,6 +74,7 @@ import {
   atualizarParticipantesDoGrupoAoVivo,
   adicionarNaArvoreDeGruposAoVivo,
   definirLinkOverrideAoVivo,
+  grupoAoVivoVigente,
 } from "./services/gruposStoreAoVivo.js";
 import { LINK_AO_VIVO_PADRAO } from "./services/linkAoVivo.js";
 
@@ -191,6 +192,21 @@ function agendarFluxo(fluxo) {
 }
 
 for (const fluxo of FLUXOS) agendarFluxo(fluxo);
+
+// Redirect público pro tráfego pago (Google/Meta Ads apontam pra cá em vez
+// de pra planilha do Google Sheets do fluxo antigo em n8n). Sempre manda
+// pro grupo Ao Vivo vigente — some sozinho quando o grupo lota e um novo
+// é criado, sem precisar trocar link em nenhum lugar manualmente. Sem
+// autenticação de propósito: é a URL pública que fica no anúncio.
+app.get("/r/ao-vivo", (_req, res) => {
+  const grupo = grupoAoVivoVigente();
+  if (!grupo || !grupo.link) {
+    console.error("[redirect] /r/ao-vivo sem grupo Ativo com link — não deu pra redirecionar");
+    res.status(503).send("Estamos preparando o grupo do Workshop Ao Vivo. Tente novamente em alguns minutos.");
+    return;
+  }
+  res.redirect(302, grupo.link);
+});
 
 app.post("/api/login", (req, res) => {
   const { user, password } = req.body ?? {};
