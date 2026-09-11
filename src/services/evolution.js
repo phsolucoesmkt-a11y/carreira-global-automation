@@ -6,13 +6,37 @@ function headers() {
   return { apikey: API_KEY, "Content-Type": "application/json" };
 }
 
+// Proteção do número: nunca mais de 1 chamada por vez na Evolution API.
+// Toda chamada passa por essa fila — depois que uma termina (sucesso ou
+// erro), espera um tempo aleatório entre 3 e 15s antes da próxima poder
+// começar. Reduz o risco de a WhatsApp marcar o número por padrão de
+// disparo em rajada. Vale pra qualquer chamada, de qualquer fluxo,
+// mesmo que o código que chamou não espere uma pela outra.
+let filaEvolution = Promise.resolve();
+
+function esperarAleatorio() {
+  const ms = 3000 + Math.random() * 12000; // 3s a 15s
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function enfileirar(tarefa) {
+  const resultado = filaEvolution.then(tarefa);
+  // A fila segue pro próximo item só depois do intervalo — independente
+  // do resultado desta chamada ter sido sucesso ou erro (não pode travar
+  // a fila pra sempre por causa de uma falha).
+  filaEvolution = resultado.catch(() => {}).then(esperarAleatorio);
+  return resultado;
+}
+
 async function call(path, options = {}) {
-  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers: headers() });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(`Evolution API ${path} falhou: HTTP ${res.status} — ${JSON.stringify(body)}`);
-  }
-  return body;
+  return enfileirar(async () => {
+    const res = await fetch(`${BASE_URL}${path}`, { ...options, headers: headers() });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(`Evolution API ${path} falhou: HTTP ${res.status} — ${JSON.stringify(body)}`);
+    }
+    return body;
+  });
 }
 
 // Espelha o nó "Criar um novo grupo": cria com 1 participante fixo (a API
