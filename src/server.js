@@ -221,14 +221,14 @@ p{color:#9aa0a6;line-height:1.5}</style></head>
 </div></body></html>`;
 }
 
-app.get("/r/ao-vivo", (_req, res) => {
+app.get("/r/ao-vivo-oficial", (_req, res) => {
   if (lerConfiguracao("redirect_ao_vivo_modo", "grupo") === "neutro") {
     res.set("Content-Type", "text/html; charset=utf-8").send(paginaNeutraDeAds());
     return;
   }
   const grupo = grupoAoVivoVigente();
   if (!grupo || !grupo.link) {
-    console.error("[redirect] /r/ao-vivo sem grupo Ativo com link — não deu pra redirecionar");
+    console.error("[redirect] /r/ao-vivo-oficial sem grupo Ativo com link — não deu pra redirecionar");
     res.status(503).send("Estamos preparando o grupo do Workshop Ao Vivo. Tente novamente em alguns minutos.");
     return;
   }
