@@ -199,7 +199,33 @@ for (const fluxo of FLUXOS) agendarFluxo(fluxo);
 // substituído (lotação no Ao Vivo, ou virada de semana no Gravado), sem
 // precisar trocar link em nenhum lugar manualmente. Sem autenticação de
 // propósito: é a URL pública que fica no anúncio.
+//
+// "Modo neutro": o Meta Ads rastreia o destino do link antes de aceitar o
+// anúncio e, se detectar que é um redirect pro WhatsApp, recusa o formato
+// "Website" e força "Conversar no WhatsApp". Pra contornar isso, cada rota
+// tem um modo configurável (padrão "grupo"): em "neutro" ela serve uma
+// página comum, sem redirecionar — dá pra publicar o anúncio nesse modo e
+// só depois trocar pra "grupo" pelo painel (aba Configurações), sem
+// precisar mexer no link já cadastrado no anúncio.
+function paginaNeutraDeAds() {
+  return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Workshop Vagas Internacionais</title>
+<style>body{font-family:system-ui,sans-serif;background:#0f1115;color:#eaeaea;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;text-align:center;padding:24px}
+.box{max-width:420px}
+h1{font-size:22px;margin:0 0 12px}
+p{color:#9aa0a6;line-height:1.5}</style></head>
+<body><div class="box">
+<h1>Inscrição recebida ✅</h1>
+<p>Você garantiu sua vaga no Workshop Vagas Internacionais. Em breve você vai receber o acesso.</p>
+</div></body></html>`;
+}
+
 app.get("/r/ao-vivo", (_req, res) => {
+  if (lerConfiguracao("redirect_ao_vivo_modo", "grupo") === "neutro") {
+    res.set("Content-Type", "text/html; charset=utf-8").send(paginaNeutraDeAds());
+    return;
+  }
   const grupo = grupoAoVivoVigente();
   if (!grupo || !grupo.link) {
     console.error("[redirect] /r/ao-vivo sem grupo Ativo com link — não deu pra redirecionar");
@@ -210,6 +236,10 @@ app.get("/r/ao-vivo", (_req, res) => {
 });
 
 app.get("/r/ao-vivo-2", (_req, res) => {
+  if (lerConfiguracao("redirect_ao_vivo_2_modo", "grupo") === "neutro") {
+    res.set("Content-Type", "text/html; charset=utf-8").send(paginaNeutraDeAds());
+    return;
+  }
   const grupo = grupoVigente();
   if (!grupo || !grupo.link) {
     console.error("[redirect] /r/ao-vivo-2 sem grupo Ativo com link — não deu pra redirecionar");
@@ -464,6 +494,29 @@ app.put("/api/config/link-ao-vivo", (req, res) => {
   const { link } = req.body ?? {};
   if (!link) return res.status(400).json({ error: "Campo 'link' é obrigatório." });
   definirConfiguracao("link_ao_vivo", link);
+  res.json({ ok: true });
+});
+
+// Modo dos links de redirect (/r/ao-vivo e /r/ao-vivo-2) usados no tráfego
+// pago — "grupo" (padrão) redireciona pro grupo vigente de verdade,
+// "neutro" serve uma página comum, pra passar pela verificação de link do
+// Meta Ads antes de trocar de volta.
+app.get("/api/config/redirect-modo", (_req, res) => {
+  res.json({
+    aoVivo: lerConfiguracao("redirect_ao_vivo_modo", "grupo"),
+    aoVivo2: lerConfiguracao("redirect_ao_vivo_2_modo", "grupo"),
+  });
+});
+
+app.put("/api/config/redirect-modo", (req, res) => {
+  const { rota, modo } = req.body ?? {};
+  if (!["ao-vivo", "ao-vivo-2"].includes(rota)) {
+    return res.status(400).json({ error: "Campo 'rota' precisa ser 'ao-vivo' ou 'ao-vivo-2'." });
+  }
+  if (!["grupo", "neutro"].includes(modo)) {
+    return res.status(400).json({ error: "Campo 'modo' precisa ser 'grupo' ou 'neutro'." });
+  }
+  definirConfiguracao(rota === "ao-vivo" ? "redirect_ao_vivo_modo" : "redirect_ao_vivo_2_modo", modo);
   res.json({ ok: true });
 });
 

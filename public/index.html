@@ -254,7 +254,7 @@ async function checarStatus() {
 }
 
 async function carregarTudo() {
-  const [fluxosRes, gruposRes, modeloRes, meRes, linkRes, replayRes, linkAoVivoRes, gruposAoVivoRes, modeloAoVivoRes] = await Promise.all([
+  const [fluxosRes, gruposRes, modeloRes, meRes, linkRes, replayRes, linkAoVivoRes, gruposAoVivoRes, modeloAoVivoRes, redirectModoRes] = await Promise.all([
     api('/api/fluxos'),
     api('/api/arvore-grupos'),
     api('/api/grupo-modelo'),
@@ -264,6 +264,7 @@ async function carregarTudo() {
     api('/api/config/link-ao-vivo'),
     api('/api/arvore-grupos-ao-vivo'),
     api('/api/grupo-modelo-ao-vivo'),
+    api('/api/config/redirect-modo'),
   ]);
   state.fluxos = fluxosRes.fluxos;
   state.grupos = gruposRes.grupos;
@@ -274,6 +275,7 @@ async function carregarTudo() {
   state.linkAoVivo = linkAoVivoRes.link;
   state.gruposAoVivo = gruposAoVivoRes.grupos;
   state.modeloAoVivo = modeloAoVivoRes.modelo;
+  state.redirectModo = { aoVivo: redirectModoRes.aoVivo, aoVivo2: redirectModoRes.aoVivo2 };
 }
 
 function renderMiniRow(f) {
@@ -442,6 +444,32 @@ function renderConfig() {
         <div><button class="btn-live" type="submit">Salvar</button></div>
       </form>
       <div id="link-ao-vivo-salvo-msg" class="muted" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <label>Links de tráfego pago (/r/ao-vivo e /r/ao-vivo-2)</label>
+      <div class="muted" style="margin-bottom:12px">
+        Em "Grupo real" o link redireciona pro grupo vigente de verdade. Em "Página neutra" ele serve uma página comum,
+        sem mencionar WhatsApp — use isso enquanto sobe/edita o anúncio no Meta Ads (ele recusa o formato "Website"
+        se detectar que o link cai direto no WhatsApp), e volte pra "Grupo real" depois de publicar.
+      </div>
+      ${renderRedirectModoRow('ao-vivo', 'Ao Vivo (/r/ao-vivo)', state.redirectModo?.aoVivo)}
+      ${renderRedirectModoRow('ao-vivo-2', 'Gravado (/r/ao-vivo-2)', state.redirectModo?.aoVivo2)}
+    </div>
+  `;
+}
+
+function renderRedirectModoRow(rota, label, modoAtual) {
+  const ehGrupo = modoAtual !== 'neutro';
+  return `
+    <div class="row top" style="margin-top:${rota === 'ao-vivo' ? '0' : '16'}px;padding-top:${rota === 'ao-vivo' ? '0' : '16'}px;${rota === 'ao-vivo' ? '' : 'border-top:1px solid var(--border)'}">
+      <div>
+        <div class="card-title">${label}</div>
+        <div class="muted" style="margin-top:2px">Modo atual: ${ehGrupo ? 'Grupo real' : 'Página neutra'}</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="small ${ehGrupo ? '' : 'secondary'}" data-redirect-modo="${rota}" data-modo="grupo" ${ehGrupo ? 'disabled' : ''}>Grupo real</button>
+        <button class="small ${!ehGrupo ? '' : 'secondary'}" data-redirect-modo="${rota}" data-modo="neutro" ${!ehGrupo ? 'disabled' : ''}>Página neutra</button>
+      </div>
     </div>
   `;
 }
@@ -876,6 +904,26 @@ function attachHandlers() {
       document.getElementById('link-ao-vivo-salvo-msg').textContent = 'Salvo ✓';
     });
   }
+
+  document.querySelectorAll('[data-redirect-modo]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const rota = btn.dataset.redirectModo;
+      const modo = btn.dataset.modo;
+      btn.disabled = true;
+      try {
+        await api('/api/config/redirect-modo', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rota, modo }),
+        });
+        await carregarTudo();
+        render();
+      } catch (e) {
+        alert(`Erro: ${e.message}`);
+        btn.disabled = false;
+      }
+    });
+  });
 }
 
 document.querySelectorAll('.navitem').forEach(el => {
