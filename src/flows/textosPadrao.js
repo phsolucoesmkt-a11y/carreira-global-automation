@@ -180,6 +180,22 @@ export const TEXTOS_PADRAO = {
       "🔗 Replay: {{replay}}\n👉 Checkout: carreiraglobal.net\n",
   },
 
+  "oferta-sexta": {
+    mensagem:
+      "Sobre os bônus que a Nina mostrou ontem: Carreira Global + Acesso Vitalício.\n\n" +
+      "São 8 ferramentas que ficam com você pra sempre:\n\n" +
+      "1️⃣ Simulação de Entrevista AO VIVO com a Nina (somente os 3 primeiros!)\n" +
+      "2️⃣ Agente de Análise de Vagas e Currículo\n" +
+      "3️⃣ Agente Cover Letter Sob Medida\n" +
+      "4️⃣ Agente LinkedIn Internacional\n" +
+      "5️⃣ Agentes de Narrativa Profissional\n" +
+      "6️⃣ Agente de Simulação de Entrevista Internacional\n" +
+      "7️⃣ ITG — Inglês Técnico Global\n" +
+      "8️⃣ App Revisão Otimizada + Baralho Exclusivo\n\n" +
+      "De R$1.497 por 12x R$70,82.\n\n" +
+      "👉 carreiraglobal.net",
+  },
+
   "sexta-13h": {
     mensagem:
       "Aproveitando o intervalo pra te lembrar de uma coisa.\n\n" +
@@ -213,6 +229,20 @@ export const TEXTOS_PADRAO = {
 
   "sabado-grupo-encerrado": {
     prefixoNome: "Grupo encerrado | Workshop Vagas Internacionais",
+  },
+
+  "qa": {
+    mensagem:
+      "Chegou o momento do Q&A e a Nina está respondendo as dúvidas de vocês individualmente no chat.\n\n" +
+      "Se tem algo que você gostaria de perguntar, aproveita a oportunidade!",
+  },
+
+  "oferta-quinta": {
+    imagemUrl: "https://drive.google.com/file/d/1u8nvl0e8aPShFsHA734dVt-dxha7xQcd/view?usp=sharing",
+    legenda:
+      "🎁 Além de tudo que você já viu na aula de hoje, quem garantir a vaga leva um bônus surpresa: Carreira Global com Acesso Vitalício.\n\n" +
+      "São 8 ferramentas extras (uma delas só pros 3 primeiros!), de R$1.497 por 12x R$70,82.\n\n" +
+      "👉 carreiraglobal.net",
   },
 
   "22h05-encerramento": {

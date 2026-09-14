@@ -1,4 +1,4 @@
-import { atualizarNomeDoGrupo, enviarTexto, enviarVideo } from "../services/evolution.js";
+import { atualizarNomeDoGrupo, enviarTexto, enviarVideo, enviarImagem } from "../services/evolution.js";
 import { db } from "../db.js";
 import { lerModeloDoGrupo } from "../services/gruposStore.js";
 import { lerCamposDoFluxo, lerConfiguracao } from "../services/config.js";
@@ -78,6 +78,33 @@ export async function executar14h({ log = console.log } = {}) {
 
 export async function executar17h({ log = console.log } = {}) {
   return executarMensagemSimples({ chave: "17h", log });
+}
+
+// Q&A (21h45): só texto, mesmo padrão genérico.
+export async function executarQA({ log = console.log } = {}) {
+  return executarMensagemSimples({ chave: "qa", log });
+}
+
+// Oferta com imagem (22h00): manda o print do bônus + legenda pra todos os
+// grupos Ativos. Não reaproveita executarMensagemSimples porque manda
+// imagem, não texto.
+export async function executarOfertaQuinta({ log = console.log } = {}) {
+  const campos = lerCamposDoFluxo("oferta-quinta", TEXTOS_PADRAO["oferta-quinta"]);
+  const grupos = gruposAtivos();
+
+  const passos = [];
+  const registrar = (passo, dados) => {
+    passos.push({ passo, dados });
+    log(`[oferta-quinta] ${passo}`, dados ?? "");
+  };
+  registrar("1. Grupos ativos encontrados", { total: grupos.length });
+
+  for (const grupo of grupos) {
+    await enviarImagem({ remoteJid: grupo.id, imagemUrl: campos.imagemUrl, legenda: campos.legenda });
+    registrar(`2. Imagem enviada (${grupo.nome ?? grupo.id})`);
+  }
+
+  return { totalGrupos: grupos.length, passos };
 }
 
 // Aviso de encerramento do workshop, 22h05 — antes da última mensagem do

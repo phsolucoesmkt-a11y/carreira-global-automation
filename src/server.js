@@ -8,10 +8,11 @@ import { executarCriarGrupo } from "./flows/criarGrupo.js";
 import { executarSejaBemVindo } from "./flows/sejaBemVindo.js";
 import { executarEAmanha, executarAudioNina } from "./flows/enqueteEUA.js";
 import { executar2Horas, executar1Hora, executar10Minutos, executarEstamosAoVivo } from "./flows/contagemRegressiva.js";
-import { executarEHoje, executar14h, executar17h, executar22h05Encerramento, executar23h } from "./flows/quintaFeira.js";
+import { executarEHoje, executar14h, executar17h, executar22h05Encerramento, executar23h, executarQA, executarOfertaQuinta } from "./flows/quintaFeira.js";
 import {
   executarUltimaChance,
   executarAvisoExtensao,
+  executarOfertaSexta,
   executarSexta13h,
   executarContaRapida,
   executarSexta17h,
@@ -118,9 +119,12 @@ const FLUXOS = [
   { chave: "durante-live-20h50", nome: "Durante a Live — 20h50", dia: "Quinta-feira", cronPadrao: "50 20 * * 4", executar: () => executar20h50(), defaults: TEXTOS_PADRAO["durante-live-20h50"] },
   { chave: "durante-live-carrinho-aberto", nome: "Durante a Live — Carrinho aberto", dia: "Quinta-feira", cronPadrao: "54 20 * * 4", executar: () => executarCarrinhoAberto(), defaults: TEXTOS_PADRAO["durante-live-carrinho-aberto"] },
   { chave: "durante-live-garantindo-vaga", nome: "Durante a Live — Já tem gente garantindo vaga", dia: "Quinta-feira", cronPadrao: "3 21 * * 4", executar: () => executarGarantindoVaga(), defaults: TEXTOS_PADRAO["durante-live-garantindo-vaga"] },
+  { chave: "qa", nome: "Q&A (21h45)", dia: "Quinta-feira", cronPadrao: "45 21 * * 4", executar: () => executarQA(), defaults: TEXTOS_PADRAO["qa"] },
+  { chave: "oferta-quinta", nome: "Oferta com imagem (22h00)", dia: "Quinta-feira", cronPadrao: "0 22 * * 4", executar: () => executarOfertaQuinta(), defaults: TEXTOS_PADRAO["oferta-quinta"] },
   { chave: "22h05-encerramento", nome: "Encerramos o Workshop (22h05)", dia: "Quinta-feira", cronPadrao: "5 22 * * 4", executar: () => executar22h05Encerramento(), defaults: TEXTOS_PADRAO["22h05-encerramento"] },
   { chave: "23h-fim-do-dia", nome: "Fim do dia (23h)", dia: "Quinta-feira", cronPadrao: "5 23 * * 4", executar: () => executar23h(), defaults: TEXTOS_PADRAO["23h-fim-do-dia"] },
   { chave: "sexta-ultima-chance", nome: "Sexta — Renomeia 'Última chance'", dia: "Sexta-feira", cronPadrao: "11 10 * * 5", executar: () => executarUltimaChance(), defaults: TEXTOS_PADRAO["sexta-ultima-chance"] },
+  { chave: "oferta-sexta", nome: "Sexta — Oferta detalhada (11h20)", dia: "Sexta-feira", cronPadrao: "20 11 * * 5", executar: () => executarOfertaSexta(), defaults: TEXTOS_PADRAO["oferta-sexta"] },
   { chave: "sexta-aviso-extensao", nome: "Sexta — Aviso de extensão (manhã)", dia: "Sexta-feira", cronPadrao: "12 10 * * 5", executar: () => executarAvisoExtensao(), defaults: TEXTOS_PADRAO["sexta-aviso-extensao"] },
   { chave: "sexta-13h", nome: "Sexta — Lembrete 13h", dia: "Sexta-feira", cronPadrao: "0 13 * * 5", executar: () => executarSexta13h(), defaults: TEXTOS_PADRAO["sexta-13h"] },
   { chave: "sexta-conta-rapida", nome: "Sexta — Conta rápida (tarde)", dia: "Sexta-feira", cronPadrao: "0 15 * * 5", executar: () => executarContaRapida(), defaults: TEXTOS_PADRAO["sexta-conta-rapida"] },
