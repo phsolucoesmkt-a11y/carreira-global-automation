@@ -154,8 +154,38 @@ export const TEXTOS_AO_VIVO_PADRAO = {
       "Pega os minutos finais antes de encerrar 👇\n🔗 {{link}}",
   },
 
+  "aovivo-qa": {
+    mensagem:
+      "Chegou o momento do Q&A e a Nina está respondendo as dúvidas de vocês individualmente no chat.\n\n" +
+      "Se tem algo que você gostaria de perguntar, aproveita a oportunidade!",
+  },
+
+  "aovivo-oferta-quarta": {
+    imagemUrl: "https://drive.google.com/file/d/1u8nvl0e8aPShFsHA734dVt-dxha7xQcd/view?usp=sharing",
+    legenda:
+      "🎁 Além de tudo que você já viu na aula de hoje, quem garantir a vaga leva um bônus surpresa: Carreira Global com Acesso Vitalício.\n\n" +
+      "São 8 ferramentas extras (uma delas só pros 3 primeiros!), de R$1.497 por 12x R$70,82.\n\n" +
+      "👉 carreiraglobal.net",
+  },
+
   "aovivo-22h05-encerramento": {
     mensagem: "Encerramos o Workshop, pessoal.\n\nO link segue aberto até meia noite.\n\ncarreiraglobal.net",
+  },
+
+  "aovivo-oferta-quinta": {
+    mensagem:
+      "Sobre os bônus que a Nina mostrou ontem: Carreira Global + Acesso Vitalício.\n\n" +
+      "São 8 ferramentas que ficam com você pra sempre:\n\n" +
+      "1️⃣ Simulação de Entrevista AO VIVO com a Nina (somente os 3 primeiros!)\n" +
+      "2️⃣ Agente de Análise de Vagas e Currículo\n" +
+      "3️⃣ Agente Cover Letter Sob Medida\n" +
+      "4️⃣ Agente LinkedIn Internacional\n" +
+      "5️⃣ Agentes de Narrativa Profissional\n" +
+      "6️⃣ Agente de Simulação de Entrevista Internacional\n" +
+      "7️⃣ ITG — Inglês Técnico Global\n" +
+      "8️⃣ App Revisão Otimizada + Baralho Exclusivo\n\n" +
+      "De R$1.497 por 12x R$70,82.\n\n" +
+      "👉 carreiraglobal.net",
   },
 
   "aovivo-13h": {

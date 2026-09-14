@@ -1,4 +1,4 @@
-import { atualizarNomeDoGrupo, enviarTexto, enviarVideo } from "../../services/evolution.js";
+import { atualizarNomeDoGrupo, enviarTexto, enviarVideo, enviarImagem } from "../../services/evolution.js";
 import { gruposAtivosAoVivo, lerModeloDoGrupoAoVivo } from "../../services/gruposStoreAoVivo.js";
 import { lerCamposDoFluxo, lerConfiguracao } from "../../services/config.js";
 import { LINK_AO_VIVO_PADRAO } from "../../services/linkAoVivo.js";
@@ -87,6 +87,31 @@ export const executar20h30AoVivo = ({ log = console.log } = {}) => executarMensa
 export const executar20h40AoVivo = ({ log = console.log } = {}) => executarMensagem("aovivo-durante-live-20h40", log);
 export const executar20h50AoVivo = ({ log = console.log } = {}) => executarMensagem("aovivo-durante-live-20h50", log);
 export const executar22h05EncerramentoAoVivo = ({ log = console.log } = {}) => executarMensagem("aovivo-22h05-encerramento", log);
+
+// Q&A (21h45): só texto, mesmo padrão genérico.
+export const executarQAAoVivo = ({ log = console.log } = {}) => executarMensagem("aovivo-qa", log);
+
+// Oferta com imagem (22h00): manda o print do bônus + legenda pra todos os
+// grupos Ao Vivo ativos. Não reaproveita executarMensagem porque manda
+// imagem, não texto.
+export async function executarOfertaQuartaAoVivo({ log = console.log } = {}) {
+  const campos = lerCamposDoFluxo("aovivo-oferta-quarta", TEXTOS_AO_VIVO_PADRAO["aovivo-oferta-quarta"]);
+  const grupos = gruposAtivosAoVivo();
+
+  const passos = [];
+  const registrar = (passo, dados) => {
+    passos.push({ passo, dados });
+    log(`[aovivo-oferta-quarta] ${passo}`, dados ?? "");
+  };
+  registrar("1. Grupos ativos encontrados", { total: grupos.length });
+
+  for (const grupo of grupos) {
+    await enviarImagem({ remoteJid: grupo.id, imagemUrl: campos.imagemUrl, legenda: campos.legenda });
+    registrar(`2. Imagem enviada (${grupo.nome ?? grupo.id})`);
+  }
+
+  return { totalGrupos: grupos.length, passos };
+}
 
 // Última mensagem do dia (23h05): só manda o texto — igual o "23h fim do
 // dia" do Gravado, o grupo continua Ativo até a quinta inteira (aviso de

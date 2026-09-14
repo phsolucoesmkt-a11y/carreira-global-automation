@@ -51,6 +51,9 @@ export const executar17hAoVivo = ({ log = console.log } = {}) => executarMensage
 export const executarUltimaMensagemAoVivo = ({ log = console.log } = {}) => executarMensagem("aovivo-ultima-mensagem", log);
 export const executar22hAoVivo = ({ log = console.log } = {}) => executarMensagem("aovivo-22h", log);
 
+// Detalhamento do bônus (11h20): mesmo padrão genérico, só texto.
+export const executarOfertaQuintaAoVivo = ({ log = console.log } = {}) => executarMensagem("aovivo-oferta-quinta", log);
+
 // Sexta 08h15: espelha o "sábado grupo encerrado" do Gravado — um dia
 // depois do último lembrete (quinta), fecha de vez o(s) grupo(s) ainda
 // Ativo(s): renomeia, conta os participantes finais e marca Inativo.

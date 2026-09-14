@@ -113,6 +113,21 @@ export async function enviarVideo({ remoteJid, videoUrl, legenda }) {
   });
 }
 
+// Igual enviarVideo, mas pra imagem (aceita link do Drive no formato de
+// compartilhamento ou já como link direto de download). Usado pra mandar
+// artes/prints com legenda — não tem equivalente direto no n8n original.
+export async function enviarImagem({ remoteJid, imagemUrl, legenda }) {
+  return call(`/message/sendMedia/${INSTANCE}`, {
+    method: "POST",
+    body: JSON.stringify({
+      number: remoteJid,
+      mediatype: "image",
+      media: driveShareLinkParaDownload(imagemUrl),
+      caption: legenda,
+    }),
+  });
+}
+
 // Espelha "Enviar enquete2".
 export async function enviarEnquete({ remoteJid, pergunta, opcoes }) {
   return call(`/message/sendPoll/${INSTANCE}`, {
