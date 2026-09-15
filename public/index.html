@@ -268,7 +268,7 @@ async function checarStatus() {
 }
 
 async function carregarTudo() {
-  const [fluxosRes, gruposRes, modeloRes, meRes, linkRes, replayRes, linkAoVivoRes, gruposAoVivoRes, modeloAoVivoRes, redirectModoRes, blackFridayRes] = await Promise.all([
+  const [fluxosRes, gruposRes, modeloRes, meRes, linkRes, replayRes, linkAoVivoRes, gruposAoVivoRes, modeloAoVivoRes, redirectModoRes, blackFridayRes, live1ModoRes] = await Promise.all([
     api('/api/fluxos'),
     api('/api/arvore-grupos'),
     api('/api/grupo-modelo'),
@@ -280,6 +280,7 @@ async function carregarTudo() {
     api('/api/grupo-modelo-ao-vivo'),
     api('/api/config/redirect-modo'),
     api('/api/grupos-black-friday'),
+    api('/api/config/live1-modo'),
   ]);
   state.fluxos = fluxosRes.fluxos;
   state.grupos = gruposRes.grupos;
@@ -293,6 +294,7 @@ async function carregarTudo() {
   state.redirectModo = { aoVivo: redirectModoRes.aoVivo, aoVivo2: redirectModoRes.aoVivo2 };
   state.gruposBlackFriday = blackFridayRes.grupos;
   state.resumoBlackFriday = blackFridayRes.resumo;
+  state.live1Modo = live1ModoRes.modo;
 }
 
 function renderMiniRow(f) {
@@ -477,6 +479,21 @@ function renderConfig() {
       </div>
       ${renderRedirectModoRow('ao-vivo', 'Ao Vivo (/r/ao-vivo-oficial)', state.redirectModo?.aoVivo)}
       ${renderRedirectModoRow('ao-vivo-2', 'Gravado (/r/ao-vivo-2)', state.redirectModo?.aoVivo2)}
+    </div>
+    <div class="card track-live1">
+      <label>${trackDot('live1')}Modo da campanha Live 1 (grupos antigos)</label>
+      <div class="muted" style="margin-bottom:12px">
+        Em "Produção real" os fluxos live1-* disparam pros 28 grupos de lead de verdade (nina_web3). Em "Grupo de teste"
+        eles disparam só pro grupo "Teste Mensagens Novas" — use isso pra validar imagem/legenda/enquete antes de rodar
+        pra valer, e volte pra "Produção real" depois.
+      </div>
+      <div class="row top">
+        <div class="muted">Modo atual: ${state.live1Modo === 'teste' ? 'Grupo de teste' : 'Produção real'}</div>
+        <div style="display:flex;gap:8px">
+          <button class="small ${state.live1Modo !== 'teste' ? '' : 'secondary'}" data-live1-modo="producao" ${state.live1Modo !== 'teste' ? 'disabled' : ''}>Produção real</button>
+          <button class="small ${state.live1Modo === 'teste' ? '' : 'secondary'}" data-live1-modo="teste" ${state.live1Modo === 'teste' ? 'disabled' : ''}>Grupo de teste</button>
+        </div>
+      </div>
     </div>
   `;
 }
@@ -972,6 +989,25 @@ function attachHandlers() {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ rota, modo }),
+        });
+        await carregarTudo();
+        render();
+      } catch (e) {
+        alert(`Erro: ${e.message}`);
+        btn.disabled = false;
+      }
+    });
+  });
+
+  document.querySelectorAll('[data-live1-modo]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const modo = btn.dataset.live1Modo;
+      btn.disabled = true;
+      try {
+        await api('/api/config/live1-modo', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ modo }),
         });
         await carregarTudo();
         render();

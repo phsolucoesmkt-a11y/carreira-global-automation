@@ -551,6 +551,22 @@ app.put("/api/config/redirect-modo", (req, res) => {
   res.json({ ok: true });
 });
 
+// Modo da campanha "Live 1" — "producao" (padrão) manda pros 28 grupos
+// reais da nina_web3; "teste" manda só pro grupo "Teste Mensagens Novas",
+// pra validar entrega antes de disparar pros grupos de lead de verdade.
+app.get("/api/config/live1-modo", (_req, res) => {
+  res.json({ modo: lerConfiguracao("live1_modo", "producao") });
+});
+
+app.put("/api/config/live1-modo", (req, res) => {
+  const { modo } = req.body ?? {};
+  if (!["producao", "teste"].includes(modo)) {
+    return res.status(400).json({ error: "Campo 'modo' precisa ser 'producao' ou 'teste'." });
+  }
+  definirConfiguracao("live1_modo", modo);
+  res.json({ ok: true });
+});
+
 // Base de grupos levantada pra Black Friday — só controle/visualização.
 // Snapshot estático (não chama a Evolution API), read-only: sem rota de
 // escrita aqui, nenhum envio de mensagem nem alteração de grupo.

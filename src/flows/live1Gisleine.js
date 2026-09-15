@@ -14,10 +14,15 @@ import {
   enviarAudio,
 } from "../services/evolution.js";
 import { db } from "../db.js";
-import { lerCamposDoFluxo } from "../services/config.js";
+import { lerCamposDoFluxo, lerConfiguracao } from "../services/config.js";
 import { ultimaExecucaoPorFluxo } from "../services/execucoes.js";
 import { listarGruposBlackFriday } from "../services/blackFriday.js";
 import { TEXTOS_LIVE1_PADRAO } from "./textosLive1Padrao.js";
+
+// Grupo criado pelo próprio bot, com o número certo (5511530401649) já
+// garantido como membro/admin — único lugar seguro pra validar entrega real
+// antes de disparar pros 28 grupos de lead de verdade.
+const GRUPO_DE_TESTE = { id: "120363412496355826@g.us", nome: "Teste Mensagens Novas", instancia: "nina_web3" };
 
 function idsAtivosDestaSemana() {
   const gravado = db.prepare(`SELECT id FROM arvore_grupos WHERE status = 'Ativo'`).all().map((r) => r.id);
@@ -26,8 +31,11 @@ function idsAtivosDestaSemana() {
 }
 
 // Só os grupos da nina_web3 (única instância ativa hoje), fora os que
-// estiverem em uso pela semana normal de funil.
+// estiverem em uso pela semana normal de funil. Em "modo teste" (toggle na
+// aba Configurações), manda só pro grupo de teste — pra validar entrega
+// antes de rodar pros 28 grupos de lead de verdade.
 export function gruposAlvoLive1() {
+  if (lerConfiguracao("live1_modo", "producao") === "teste") return [GRUPO_DE_TESTE];
   const emUso = idsAtivosDestaSemana();
   return listarGruposBlackFriday().filter((g) => g.instancia === "nina_web3" && !emUso.has(g.id));
 }
