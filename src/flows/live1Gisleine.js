@@ -40,6 +40,22 @@ export function gruposAlvoLive1() {
   return listarGruposBlackFriday().filter((g) => g.instancia === "nina_web3" && !emUso.has(g.id));
 }
 
+// Evita reenviar pros grupos que já receberam com sucesso na última
+// execução desse mesmo fluxo — importante porque essa campanha é disparada
+// manualmente e pode precisar rodar de novo só pros que faltaram.
+function gruposPendentes(chave, grupos) {
+  const ultima = ultimaExecucaoPorFluxo(chave);
+  if (ultima?.status !== "sucesso") return grupos;
+  let detalhe;
+  try {
+    detalhe = JSON.parse(ultima.detalhe ?? "{}");
+  } catch {
+    detalhe = {};
+  }
+  const jaEnviados = new Set(detalhe.sucesso ?? []);
+  return grupos.filter((g) => !jaEnviados.has(g.id));
+}
+
 function criarRegistrador(chave, log) {
   const passos = [];
   return {
@@ -67,35 +83,58 @@ async function paraCadaGrupo(grupos, acao) {
   return { sucesso, falha };
 }
 
-// Terça — abertura: renomeia, troca foto e descrição do grupo, manda o
-// banner de anúncio da live com a legenda.
+// Tenta uma ação que exige o bot ser admin do grupo (nome/foto/descrição).
+// Se não for admin (ou qualquer outro erro), registra o aviso e segue pra
+// próxima etapa — isso nunca pode bloquear o envio do banner, que é o que
+// realmente importa pro lead.
+async function tentarComoAdmin(rotulo, acao, avisos) {
+  try {
+    await acao();
+  } catch (err) {
+    avisos.push(`${rotulo}: ${err.message}`);
+  }
+}
+
+// Terça — abertura: renomeia, troca foto e descrição do grupo (best-effort,
+// só funciona se o bot ainda for admin — muitos desses grupos antigos já
+// tiraram o bot da administração) e manda o banner de anúncio da live com a
+// legenda, que é o que precisa chegar independente das outras 3 falharem.
 export async function executarLive1Abertura({ log = console.log } = {}) {
   const campos = lerCamposDoFluxo("live1-abertura", TEXTOS_LIVE1_PADRAO["live1-abertura"]);
-  const grupos = gruposAlvoLive1();
+  const grupos = gruposPendentes("live1-abertura", gruposAlvoLive1());
   const { registrar } = criarRegistrador("live1-abertura", log);
-  registrar("1. Grupos-alvo (nina_web3, fora de uso)", { total: grupos.length });
+  registrar("1. Grupos-alvo (nina_web3, fora de uso, ainda não enviados)", { total: grupos.length });
 
   if (!campos.fotoGrupoUrl || !campos.imagemUrl) {
     registrar("Pulado — falta configurar fotoGrupoUrl e/ou imagemUrl pelo painel");
     return { pulado: true, motivo: "faltam mídias configuradas", total: grupos.length };
   }
 
-  const resultado = await paraCadaGrupo(grupos, async (grupo) => {
-    await atualizarNomeDoGrupo({ groupJid: grupo.id, nome: campos.nome });
-    await atualizarImagemDoGrupo({ groupJid: grupo.id, imagemUrl: campos.fotoGrupoUrl });
-    await atualizarDescricaoDoGrupo({ groupJid: grupo.id, descricao: campos.descricao });
-    await enviarImagem({ remoteJid: grupo.id, imagemUrl: campos.imagemUrl, legenda: campos.legenda });
-  });
-  registrar("2. Concluído", { enviados: resultado.sucesso.length, falhas: resultado.falha.length });
-  return { total: grupos.length, ...resultado };
+  const sucesso = [];
+  const falha = [];
+  for (const grupo of grupos) {
+    const avisos = [];
+    await tentarComoAdmin("nome", () => atualizarNomeDoGrupo({ groupJid: grupo.id, nome: campos.nome }), avisos);
+    await tentarComoAdmin("foto", () => atualizarImagemDoGrupo({ groupJid: grupo.id, imagemUrl: campos.fotoGrupoUrl }), avisos);
+    await tentarComoAdmin("descricao", () => atualizarDescricaoDoGrupo({ groupJid: grupo.id, descricao: campos.descricao }), avisos);
+    try {
+      await enviarImagem({ remoteJid: grupo.id, imagemUrl: campos.imagemUrl, legenda: campos.legenda });
+      sucesso.push(grupo.id);
+      if (avisos.length) registrar(`Aviso (${grupo.nome ?? grupo.id}) — banner enviado, mas:`, avisos);
+    } catch (err) {
+      falha.push({ id: grupo.id, nome: grupo.nome, erro: err.message, avisos });
+    }
+  }
+  registrar("2. Concluído", { enviados: sucesso.length, falhas: falha.length });
+  return { total: grupos.length, sucesso, falha };
 }
 
 // Quarta 12h30 — banner com a mensagem que a Gisleine mandou pra Nina.
 export async function executarLive1MensagemGisleine({ log = console.log } = {}) {
   const campos = lerCamposDoFluxo("live1-mensagem-gisleine", TEXTOS_LIVE1_PADRAO["live1-mensagem-gisleine"]);
-  const grupos = gruposAlvoLive1();
+  const grupos = gruposPendentes("live1-mensagem-gisleine", gruposAlvoLive1());
   const { registrar } = criarRegistrador("live1-mensagem-gisleine", log);
-  registrar("1. Grupos-alvo", { total: grupos.length });
+  registrar("1. Grupos-alvo (ainda não enviados)", { total: grupos.length });
 
   if (!campos.imagemUrl) {
     registrar("Pulado — falta configurar imagemUrl pelo painel");
@@ -114,9 +153,9 @@ export async function executarLive1MensagemGisleine({ log = console.log } = {}) 
 // como reserva (ver executarLive1Audio2).
 export async function executarLive1Audio1({ log = console.log } = {}) {
   const campos = lerCamposDoFluxo("live1-audio1", TEXTOS_LIVE1_PADRAO["live1-audio1"]);
-  const grupos = gruposAlvoLive1();
+  const grupos = gruposPendentes("live1-audio1", gruposAlvoLive1());
   const { registrar } = criarRegistrador("live1-audio1", log);
-  registrar("1. Grupos-alvo", { total: grupos.length });
+  registrar("1. Grupos-alvo (ainda não enviados)", { total: grupos.length });
 
   if (!campos.audioUrl) {
     registrar("Pulado — áudio 1 ainda não gravado/configurado");
@@ -131,9 +170,9 @@ export async function executarLive1Audio1({ log = console.log } = {}) {
 // Sexta 12h30 — enquete sobre o que perguntar pra Gisleine.
 export async function executarLive1Enquete({ log = console.log } = {}) {
   const campos = lerCamposDoFluxo("live1-enquete", TEXTOS_LIVE1_PADRAO["live1-enquete"]);
-  const grupos = gruposAlvoLive1();
+  const grupos = gruposPendentes("live1-enquete", gruposAlvoLive1());
   const { registrar } = criarRegistrador("live1-enquete", log);
-  registrar("1. Grupos-alvo", { total: grupos.length });
+  registrar("1. Grupos-alvo (ainda não enviados)", { total: grupos.length });
 
   const resultado = await paraCadaGrupo(grupos, (grupo) =>
     enviarEnquete({ remoteJid: grupo.id, pergunta: campos.enquetePergunta, opcoes: campos.enqueteOpcoes })
@@ -147,9 +186,9 @@ export async function executarLive1Enquete({ log = console.log } = {}) {
 export async function executarLive1Audio2({ log = console.log } = {}) {
   const campos = lerCamposDoFluxo("live1-audio2", TEXTOS_LIVE1_PADRAO["live1-audio2"]);
   const campos1 = lerCamposDoFluxo("live1-audio1", TEXTOS_LIVE1_PADRAO["live1-audio1"]);
-  const grupos = gruposAlvoLive1();
+  const grupos = gruposPendentes("live1-audio2", gruposAlvoLive1());
   const { registrar } = criarRegistrador("live1-audio2", log);
-  registrar("1. Grupos-alvo", { total: grupos.length });
+  registrar("1. Grupos-alvo (ainda não enviados)", { total: grupos.length });
 
   const ultimaAudio1 = ultimaExecucaoPorFluxo("live1-audio1");
   const audio1Saiu = ultimaAudio1?.status === "sucesso" && (() => {
