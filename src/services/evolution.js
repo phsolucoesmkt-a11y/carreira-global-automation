@@ -149,6 +149,14 @@ export async function atualizarNomeDoGrupo({ groupJid, nome }) {
   });
 }
 
+// Espelha "Atualizar nome do grupo", mas pra descrição.
+export async function atualizarDescricaoDoGrupo({ groupJid, descricao }) {
+  return call(`/group/updateGroupDescription/${INSTANCE}?groupJid=${encodeURIComponent(groupJid)}`, {
+    method: "POST",
+    body: JSON.stringify({ description: descricao }),
+  });
+}
+
 // Busca a lista de participantes de um grupo — usado pra guardar quantas
 // pessoas ficaram no grupo (histórico), não tem equivalente no n8n original.
 export async function buscarParticipantesDoGrupo({ groupJid }) {

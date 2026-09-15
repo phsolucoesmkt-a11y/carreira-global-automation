@@ -39,6 +39,16 @@ import { LINK_DA_LIVE_PADRAO, LINK_REPLAY_PADRAO } from "./services/linkDaLive.j
 import { cronParaTexto } from "./services/cronTexto.js";
 import { listarGruposBlackFriday, resumoInstanciasBlackFriday } from "./services/blackFriday.js";
 
+// Campanha pontual "Live 1 · Gisleine" (grupos antigos, reengajamento).
+import {
+  executarLive1Abertura,
+  executarLive1MensagemGisleine,
+  executarLive1Audio1,
+  executarLive1Enquete,
+  executarLive1Audio2,
+} from "./flows/live1Gisleine.js";
+import { TEXTOS_LIVE1_PADRAO } from "./flows/textosLive1Padrao.js";
+
 // Trilha Ao Vivo — separada do Gravado (grupo, molde e link próprios).
 import { executarCriarGrupoAoVivo } from "./flows/aoVivo/criarGrupoAoVivo.js";
 import { executarSejaBemVindoAoVivo } from "./flows/aoVivo/sejaBemVindoAoVivo.js";
@@ -165,6 +175,16 @@ const FLUXOS = [
   { chave: "aovivo-grupo-encerrado", nome: "Ao Vivo — Grupo encerrado (renomeia)", dia: "Sexta-feira", trilha: "ao-vivo", cronPadrao: "15 8 * * 5", executar: () => executarGrupoEncerradoAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-grupo-encerrado"] },
   { chave: "aovivo-checa-lotacao", nome: "Ao Vivo — Checa lotação (a cada 30min)", dia: "Contínuo", trilha: "ao-vivo", cronPadrao: "*/30 * * * *", executar: () => executarChecaLotacaoAoVivo(), defaults: null },
   { chave: "interno-link-ao-vivo", nome: "Interno — Link Ao Vivo + Cobrança Nina", dia: "Sexta-feira", trilha: "interno", cronPadrao: "0 16 * * 5", executar: () => executarLinkAoVivoNina(), defaults: TEXTOS_INTERNO_PADRAO["interno-link-ao-vivo"] },
+
+  // Campanha pontual "Live 1 · Gisleine" — reengajamento dos grupos antigos
+  // (nina_web3) antes da live de terça, 22/09, às 8h. Cron fixo por data
+  // (dia/mês), não por dia-da-semana recorrente, porque é um evento único
+  // desta semana — desligar (toggle) ou apagar depois que passar.
+  { chave: "live1-abertura", nome: "Live 1 — Abertura (nome, foto, descrição, banner)", dia: "Terça, 15/09", trilha: "live1", cronPadrao: "0 14 15 9 *", executar: () => executarLive1Abertura(), defaults: TEXTOS_LIVE1_PADRAO["live1-abertura"] },
+  { chave: "live1-mensagem-gisleine", nome: "Live 1 — Mensagem da Gisleine (12h30)", dia: "Quarta, 16/09", trilha: "live1", cronPadrao: "30 12 16 9 *", executar: () => executarLive1MensagemGisleine(), defaults: TEXTOS_LIVE1_PADRAO["live1-mensagem-gisleine"] },
+  { chave: "live1-audio1", nome: "Live 1 — Áudio 1 da Nina (10h)", dia: "Quinta, 17/09", trilha: "live1", cronPadrao: "0 10 17 9 *", executar: () => executarLive1Audio1(), defaults: TEXTOS_LIVE1_PADRAO["live1-audio1"] },
+  { chave: "live1-enquete", nome: "Live 1 — Enquete (12h30)", dia: "Sexta, 18/09", trilha: "live1", cronPadrao: "30 12 18 9 *", executar: () => executarLive1Enquete(), defaults: TEXTOS_LIVE1_PADRAO["live1-enquete"] },
+  { chave: "live1-audio2", nome: "Live 1 — Áudio 2 da Nina (10h)", dia: "Sábado, 19/09", trilha: "live1", cronPadrao: "0 10 19 9 *", executar: () => executarLive1Audio2(), defaults: TEXTOS_LIVE1_PADRAO["live1-audio2"] },
 ];
 
 async function executarFluxo(fluxo, origem) {
