@@ -138,6 +138,13 @@
   .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
   .empty { color: var(--faint); font-size: 12.5px; padding: 16px; text-align: center; border: 1px dashed var(--border); border-radius: var(--radius); background: var(--bg-elev); }
+
+  /* ---------- Table ---------- */
+  .bf-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .bf-table th { text-align: left; font-size: 10.5px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; padding: 12px 14px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); }
+  .bf-table td { padding: 10px 14px; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
+  .bf-table tbody tr:hover { background: var(--surface-hover); }
+  .bf-table tbody tr:last-child td { border-bottom: none; }
   pre { background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; font-size: 11.5px; overflow-x: auto; white-space: pre-wrap; color: var(--muted); }
 
   /* ---------- Stats / dashboard ---------- */
@@ -181,6 +188,7 @@
       <div class="navitem" data-view="overview"><span>Visão Geral</span></div>
       <div class="navitem" data-view="fluxos"><span>Fluxos</span></div>
       <div class="navitem" data-view="grupos"><span>Grupos</span></div>
+      <div class="navitem" data-view="black-friday"><span>Black Friday</span></div>
       <div class="navitem" data-view="editar"><span>Editar</span></div>
       <div class="navitem" data-view="config"><span>Configurações</span></div>
       <div class="navitem" data-view="usuarios"><span>Usuários</span></div>
@@ -200,6 +208,7 @@ const ICONS = {
   edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
   link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
   gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  tag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L4 3a1 1 0 0 0-1 1l.24 5.59a2 2 0 0 0 .59 1.41l9.58 9.58a2 2 0 0 0 2.83 0l4.35-4.35a2 2 0 0 0 0-2.82Z"/><circle cx="8" cy="8" r="1.5" fill="currentColor" stroke="none"/></svg>',
 };
 
 let state = {
@@ -207,6 +216,7 @@ let state = {
   linkDaLive: '', linkReplay: '', linkAoVivo: '', editando: null, editandoCampos: null, editandoCron: '',
   trilhaGrupos: 'gravado', trilhaEditar: 'gravado', trilhaFluxos: 'gravado',
   gruposAoVivo: [], modeloAoVivo: null,
+  gruposBlackFriday: [], resumoBlackFriday: { total: 0, porInstancia: {} },
 };
 
 function endpointsTrilha(trilha) {
@@ -254,7 +264,7 @@ async function checarStatus() {
 }
 
 async function carregarTudo() {
-  const [fluxosRes, gruposRes, modeloRes, meRes, linkRes, replayRes, linkAoVivoRes, gruposAoVivoRes, modeloAoVivoRes, redirectModoRes] = await Promise.all([
+  const [fluxosRes, gruposRes, modeloRes, meRes, linkRes, replayRes, linkAoVivoRes, gruposAoVivoRes, modeloAoVivoRes, redirectModoRes, blackFridayRes] = await Promise.all([
     api('/api/fluxos'),
     api('/api/arvore-grupos'),
     api('/api/grupo-modelo'),
@@ -265,6 +275,7 @@ async function carregarTudo() {
     api('/api/arvore-grupos-ao-vivo'),
     api('/api/grupo-modelo-ao-vivo'),
     api('/api/config/redirect-modo'),
+    api('/api/grupos-black-friday'),
   ]);
   state.fluxos = fluxosRes.fluxos;
   state.grupos = gruposRes.grupos;
@@ -276,6 +287,8 @@ async function carregarTudo() {
   state.gruposAoVivo = gruposAoVivoRes.grupos;
   state.modeloAoVivo = modeloAoVivoRes.modelo;
   state.redirectModo = { aoVivo: redirectModoRes.aoVivo, aoVivo2: redirectModoRes.aoVivo2 };
+  state.gruposBlackFriday = blackFridayRes.grupos;
+  state.resumoBlackFriday = blackFridayRes.resumo;
 }
 
 function renderMiniRow(f) {
@@ -574,6 +587,38 @@ function renderGrupos() {
   `;
 }
 
+function renderBlackFriday() {
+  const grupos = state.gruposBlackFriday;
+  const resumo = state.resumoBlackFriday;
+  const instancias = Object.keys(resumo.porInstancia || {}).sort();
+  return `
+    <div class="page-header">
+      <div><h1 class="page-title">Black Friday</h1><div class="page-sub">Base de grupos "Workshop Vagas Internacionais" (2026) levantada pra Black Friday — só controle/visualização, read-only. Nenhuma ação de nome, descrição, foto ou mensagem sai daqui.</div></div>
+    </div>
+    <div class="stats-grid" style="grid-template-columns: repeat(${1 + instancias.length}, 1fr)">
+      <div class="stat-card"><div class="stat-label">Total de grupos</div><div class="stat-value">${resumo.total}</div><div class="stat-hint">Workshop Vagas Internacionais · 2026</div></div>
+      ${instancias.map(inst => `<div class="stat-card"><div class="stat-label">${inst}</div><div class="stat-value">${resumo.porInstancia[inst]}</div><div class="stat-hint">grupos atribuídos</div></div>`).join('')}
+    </div>
+    <div class="card" style="padding:0;overflow-x:auto">
+      <table class="bf-table">
+        <thead>
+          <tr><th>#</th><th>Nome atual do grupo</th><th>ID do grupo</th><th>Instância responsável</th></tr>
+        </thead>
+        <tbody>
+          ${grupos.map((g, i) => `
+            <tr>
+              <td class="faint">${i + 1}</td>
+              <td>${g.nome}</td>
+              <td class="faint" style="font-family:monospace;font-size:11.5px">${g.id}</td>
+              <td><span class="badge ${g.instancia === 'nina_web2' ? 'ativo' : 'pendente'}">${g.instancia}</span></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 function renderEditar() {
   const trilha = state.trilhaEditar;
   const m = trilha === 'ao-vivo' ? state.modeloAoVivo : state.modelo;
@@ -632,6 +677,7 @@ function render() {
   if (state.view === 'overview') main.innerHTML = renderOverview();
   else if (state.view === 'fluxos') main.innerHTML = renderFluxos();
   else if (state.view === 'grupos') main.innerHTML = renderGrupos();
+  else if (state.view === 'black-friday') main.innerHTML = renderBlackFriday();
   else if (state.view === 'editar') main.innerHTML = renderEditar();
   else if (state.view === 'config') main.innerHTML = renderConfig();
   else if (state.view === 'usuarios') main.innerHTML = renderUsuarios();
@@ -937,7 +983,7 @@ document.getElementById('btn-sair').addEventListener('click', async () => {
 });
 
 function montarIconesNav() {
-  const map = { overview: 'home', fluxos: 'flow', grupos: 'users', editar: 'edit', config: 'link', usuarios: 'gear' };
+  const map = { overview: 'home', fluxos: 'flow', grupos: 'users', 'black-friday': 'tag', editar: 'edit', config: 'link', usuarios: 'gear' };
   document.querySelectorAll('.navitem').forEach(el => {
     const iconKey = map[el.dataset.view];
     if (iconKey) el.insertAdjacentHTML('afterbegin', ICONS[iconKey]);

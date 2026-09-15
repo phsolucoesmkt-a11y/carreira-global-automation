@@ -37,6 +37,7 @@ import { createSessionToken, verifySessionToken, parseCookies } from "./services
 import { lerCamposDoFluxo, salvarCamposDoFluxo, lerCronDoFluxo, salvarCronDoFluxo, lerAtivoDoFluxo, salvarAtivoDoFluxo, lerConfiguracao, definirConfiguracao } from "./services/config.js";
 import { LINK_DA_LIVE_PADRAO, LINK_REPLAY_PADRAO } from "./services/linkDaLive.js";
 import { cronParaTexto } from "./services/cronTexto.js";
+import { listarGruposBlackFriday, resumoInstanciasBlackFriday } from "./services/blackFriday.js";
 
 // Trilha Ao Vivo — separada do Gravado (grupo, molde e link próprios).
 import { executarCriarGrupoAoVivo } from "./flows/aoVivo/criarGrupoAoVivo.js";
@@ -528,6 +529,13 @@ app.put("/api/config/redirect-modo", (req, res) => {
   }
   definirConfiguracao(rota === "ao-vivo" ? "redirect_ao_vivo_modo" : "redirect_ao_vivo_2_modo", modo);
   res.json({ ok: true });
+});
+
+// Base de grupos levantada pra Black Friday — só controle/visualização.
+// Snapshot estático (não chama a Evolution API), read-only: sem rota de
+// escrita aqui, nenhum envio de mensagem nem alteração de grupo.
+app.get("/api/grupos-black-friday", (_req, res) => {
+  res.json({ grupos: listarGruposBlackFriday(), resumo: resumoInstanciasBlackFriday() });
 });
 
 app.get("/api/execucoes", (req, res) => {
