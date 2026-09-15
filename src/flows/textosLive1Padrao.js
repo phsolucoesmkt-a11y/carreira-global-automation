@@ -6,7 +6,7 @@
 export const TEXTOS_LIVE1_PADRAO = {
   "live1-abertura": {
     nome: "🔴 LIVE GRATUITA 22/09 | Contratada por empresa americana",
-    fotoGrupoUrl: "",
+    fotoGrupoUrl: "https://drive.google.com/file/d/1UPbpo3jQXjBq5wA8buqOahG_pvrLhO8k/view?usp=sharing",
     descricao:
       "🔴 LIVE GRATUITA\n" +
       "Como a Gisleine, da área de finanças, foi contratada por uma empresa americana\n\n" +
