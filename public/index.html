@@ -602,13 +602,14 @@ function renderBlackFriday() {
     <div class="card" style="padding:0;overflow-x:auto">
       <table class="bf-table">
         <thead>
-          <tr><th>#</th><th>Nome atual do grupo</th><th>ID do grupo</th><th>Instância responsável</th></tr>
+          <tr><th>#</th><th>Nome atual do grupo</th><th>Criado em</th><th>ID do grupo</th><th>Instância responsável</th></tr>
         </thead>
         <tbody>
           ${grupos.map((g, i) => `
             <tr>
               <td class="faint">${i + 1}</td>
               <td>${g.nome}</td>
+              <td class="faint">${g.criadoEm}</td>
               <td class="faint" style="font-family:monospace;font-size:11.5px">${g.id}</td>
               <td><span class="badge ${g.instancia === 'nina_web2' ? 'ativo' : 'pendente'}">${g.instancia}</span></td>
             </tr>
