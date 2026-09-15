@@ -40,19 +40,21 @@ export function gruposAlvoLive1() {
   return listarGruposBlackFriday().filter((g) => g.instancia === "nina_web3" && !emUso.has(g.id));
 }
 
-// Evita reenviar pros grupos que já receberam com sucesso na última
-// execução desse mesmo fluxo — importante porque essa campanha é disparada
-// manualmente e pode precisar rodar de novo só pros que faltaram.
+// Evita reenviar pros grupos que já receberam com sucesso em QUALQUER
+// execução passada desse mesmo fluxo (olha o histórico inteiro, não só a
+// última) — importante porque essa campanha é disparada manualmente e pode
+// ser clicada de novo várias vezes até cobrir todos os grupos.
 function gruposPendentes(chave, grupos) {
-  const ultima = ultimaExecucaoPorFluxo(chave);
-  if (ultima?.status !== "sucesso") return grupos;
-  let detalhe;
-  try {
-    detalhe = JSON.parse(ultima.detalhe ?? "{}");
-  } catch {
-    detalhe = {};
+  const linhas = db.prepare(`SELECT detalhe FROM execucoes WHERE fluxo = ? AND status = 'sucesso'`).all(chave);
+  const jaEnviados = new Set();
+  for (const linha of linhas) {
+    try {
+      const detalhe = JSON.parse(linha.detalhe ?? "{}");
+      for (const id of detalhe.sucesso ?? []) jaEnviados.add(id);
+    } catch {
+      // registro antigo/malformado — ignora
+    }
   }
-  const jaEnviados = new Set(detalhe.sucesso ?? []);
   return grupos.filter((g) => !jaEnviados.has(g.id));
 }
 
