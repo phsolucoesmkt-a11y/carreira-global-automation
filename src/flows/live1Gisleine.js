@@ -104,7 +104,11 @@ async function tentarComoAdmin(rotulo, acao, avisos) {
 export async function executarLive1Abertura({ log = console.log } = {}) {
   const campos = lerCamposDoFluxo("live1-abertura", TEXTOS_LIVE1_PADRAO["live1-abertura"]);
   const pendentes = gruposPendentes("live1-abertura", gruposAlvoLive1());
-  const loteMaximo = Number(campos.loteMaximo) || pendentes.length;
+  // Se loteMaximo vier vazio/inválido do config salvo, trava em 1 (nunca manda
+  // pra todo mundo de uma vez — foi assim que 7 grupos levaram banner
+  // duplicado em 16/09, com um valor de config antigo/ausente caindo no
+  // fallback errado de "manda tudo que tiver pendente").
+  const loteMaximo = Number(campos.loteMaximo) || 1;
   const grupos = pendentes.slice(0, loteMaximo);
   const { registrar } = criarRegistrador("live1-abertura", log);
   registrar("1. Grupos-alvo (nina_web3, fora de uso, ainda não enviados)", { pendentes: pendentes.length, nesteLote: grupos.length });
@@ -137,7 +141,7 @@ export async function executarLive1Abertura({ log = console.log } = {}) {
 export async function executarLive1MensagemGisleine({ log = console.log } = {}) {
   const campos = lerCamposDoFluxo("live1-mensagem-gisleine", TEXTOS_LIVE1_PADRAO["live1-mensagem-gisleine"]);
   const pendentes = gruposPendentes("live1-mensagem-gisleine", gruposAlvoLive1());
-  const loteMaximo = Number(campos.loteMaximo) || pendentes.length;
+  const loteMaximo = Number(campos.loteMaximo) || 1;
   const grupos = pendentes.slice(0, loteMaximo);
   const { registrar } = criarRegistrador("live1-mensagem-gisleine", log);
   registrar("1. Grupos-alvo (ainda não enviados)", { pendentes: pendentes.length, nesteLote: grupos.length });
