@@ -1,10 +1,10 @@
 // Campanha "Live 1 · Gisleine" — reengajamento pontual dos grupos antigos
-// "Workshop Vagas Internacionais" (levantamento Black Friday) antes da live
-// de terça, 22/09, às 8h. Diferente das trilhas Gravado/Ao Vivo/Interno, não
-// tem um "grupo vigente" único: dispara pra uma lista fixa de grupos já
-// encerrados. Só a instância nina_web3 está ativa (nina_web2 caiu) — grupos
-// dela ficam de fora. Também ficam de fora os grupos que estiverem Ativo
-// nas trilhas Gravado/Ao Vivo essa semana, pra nunca mexer num grupo em uso.
+// "Workshop Vagas Internacionais" antes da live de terça, 22/09, às 8h.
+// Diferente das trilhas Gravado/Ao Vivo/Interno, não tem um "grupo vigente"
+// único: dispara pra uma lista fixa de grupos já encerrados. Também ficam
+// de fora os grupos que estiverem Ativo nas trilhas Gravado/Ao Vivo essa
+// semana, pra nunca mexer num grupo em uso — checado ao vivo no banco,
+// nunca numa lista estática, porque qual grupo está em uso muda toda semana.
 import {
   atualizarNomeDoGrupo,
   atualizarImagemDoGrupo,
@@ -16,7 +16,7 @@ import {
 import { db } from "../db.js";
 import { lerCamposDoFluxo, lerConfiguracao } from "../services/config.js";
 import { ultimaExecucaoPorFluxo } from "../services/execucoes.js";
-import { listarGruposBlackFriday } from "../services/blackFriday.js";
+import { listarGruposLive1Reais } from "../services/live1GruposReais.js";
 import { TEXTOS_LIVE1_PADRAO } from "./textosLive1Padrao.js";
 
 // Grupo criado pelo próprio bot, com o número certo (5511530401649) já
@@ -30,14 +30,14 @@ function idsAtivosDestaSemana() {
   return new Set([...gravado, ...aoVivo]);
 }
 
-// Só os grupos da nina_web3 (única instância ativa hoje), fora os que
-// estiverem em uso pela semana normal de funil. Em "modo teste" (toggle na
-// aba Configurações), manda só pro grupo de teste — pra validar entrega
-// antes de rodar pros 28 grupos de lead de verdade.
+// Lista real (verificada manualmente, ver live1GruposReais.js) menos os que
+// estiverem em uso pela semana normal de funil agora. Em "modo teste"
+// (toggle na aba Configurações), manda só pro grupo de teste — pra validar
+// entrega antes de rodar pros grupos de lead de verdade.
 export function gruposAlvoLive1() {
   if (lerConfiguracao("live1_modo", "producao") === "teste") return [GRUPO_DE_TESTE];
   const emUso = idsAtivosDestaSemana();
-  return listarGruposBlackFriday().filter((g) => g.instancia === "nina_web3" && !emUso.has(g.id));
+  return listarGruposLive1Reais().filter((g) => !emUso.has(g.id));
 }
 
 // Evita reenviar pros grupos que já receberam com sucesso em QUALQUER
@@ -124,7 +124,7 @@ export async function executarLive1Abertura({ log = console.log } = {}) {
     try {
       await enviarImagem({ remoteJid: grupo.id, imagemUrl: campos.imagemUrl, legenda: campos.legenda });
       sucesso.push(grupo.id);
-      if (avisos.length) registrar(`Aviso (${grupo.nome ?? grupo.id}) — banner enviado, mas:`, avisos);
+      registrar(`Enviado (${grupo.nome ?? grupo.id})`, { link: grupo.linkPlanilha ?? "sem link registrado", avisos: avisos.length ? avisos : undefined });
     } catch (err) {
       falha.push({ id: grupo.id, nome: grupo.nome, erro: err.message, avisos });
     }

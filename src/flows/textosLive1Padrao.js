@@ -5,7 +5,7 @@
 // preencher pelo painel (Editar) antes do horário de cada envio.
 export const TEXTOS_LIVE1_PADRAO = {
   "live1-abertura": {
-    loteMaximo: 5,
+    loteMaximo: 1,
     nome: "🔴 LIVE GRATUITA 22/09 | Contratada por empresa americana",
     fotoGrupoUrl: "https://drive.google.com/file/d/1UPbpo3jQXjBq5wA8buqOahG_pvrLhO8k/view?usp=sharing",
     descricao:
@@ -27,7 +27,7 @@ export const TEXTOS_LIVE1_PADRAO = {
   },
 
   "live1-mensagem-gisleine": {
-    loteMaximo: 5,
+    loteMaximo: 1,
     imagemUrl: "https://drive.google.com/file/d/1QVBFqiD97dLqQMJDrprD0cCh6ed00uu4/view?usp=sharing",
     legenda:
       "Essa foi a mensagem que a Gisleine mandou pra Nina quando começou no trabalho novo. 👆\n\n" +
