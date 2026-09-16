@@ -195,7 +195,19 @@ const FLUXOS = [
   { chave: "live1-audio2", nome: "Live 1 — Áudio 2 da Nina (10h)", dia: "Sábado, 19/09", trilha: "live1", cronPadrao: "0 10 19 9 *", executar: () => executarLive1Audio2(), defaults: TEXTOS_LIVE1_PADRAO["live1-audio2"] },
 ];
 
+// Trava por chave de fluxo — impede que cron automático e clique manual (ou
+// duas execuções automáticas quase simultâneas) rodem o MESMO fluxo ao mesmo
+// tempo, o que já causou envio duplicado pros mesmos grupos (histórico de
+// 16/09: fluxo "preso" de um processo anterior terminou depois do redeploy,
+// sobrepondo com a execução nova e reenviando pros mesmos 7 grupos).
+const fluxosEmExecucao = new Set();
+
 async function executarFluxo(fluxo, origem) {
+  if (fluxosEmExecucao.has(fluxo.chave)) {
+    console.log(`[${origem}] ${fluxo.chave} já está em execução, pulando`);
+    return { pulado: true, motivo: "execução concorrente evitada" };
+  }
+  fluxosEmExecucao.add(fluxo.chave);
   try {
     const resultado = await fluxo.executar();
     registrarExecucao({ fluxo: fluxo.chave, origem, status: "sucesso", detalhe: resultado });
@@ -205,6 +217,8 @@ async function executarFluxo(fluxo, origem) {
     registrarExecucao({ fluxo: fluxo.chave, origem, status: "erro", detalhe: { error: err.message } });
     console.error(`[${origem}] falha ao executar ${fluxo.chave}:`, err.message);
     throw err;
+  } finally {
+    fluxosEmExecucao.delete(fluxo.chave);
   }
 }
 
