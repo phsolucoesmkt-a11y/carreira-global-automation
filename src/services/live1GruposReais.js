@@ -57,8 +57,15 @@ export const GRUPOS_LIVE1_REAIS = [
   { id: "120363431273697008@g.us", nome: "Grupo encerrado | Workshop Vagas Internacionais", linkPlanilha: "https://chat.whatsapp.com/EopFPHdqouiAq7CJ4D2Fc6" },
   { id: "120363429311239788@g.us", nome: "📣 Workshop Vagas Internacionais", linkPlanilha: null },
   { id: "120363431490793377@g.us", nome: "Grupo encerrado | Workshop Vagas Internacionais", linkPlanilha: "https://chat.whatsapp.com/B59nXBaPk0rGpAmU4DTLYh" },
-  { id: "120363410001684875@g.us", nome: "🚨🚨📣 É AMANHÃ -  20hrs | Workshop Vagas Internacionais - 16/09", linkPlanilha: "https://chat.whatsapp.com/H9wKv6qZU572nJoWR37JPm" },
-  { id: "120363431176053725@g.us", nome: "📣 Workshop Vagas Internacionais", linkPlanilha: "https://chat.whatsapp.com/Dcrr2xVnEnaH9Zq3ybziiH" },
+  // ATENÇÃO: os 2 grupos abaixo foram removidos de propósito porque são os
+  // grupos ATIVOS de verdade da semana normal (Ao Vivo e Gravado) — não
+  // podem NUNCA receber a campanha Live 1. Ficam de fora daqui como
+  // primeira camada de proteção, além do filtro dinâmico em
+  // idsAtivosDestaSemana() (que consulta o banco ao vivo). Dupla proteção
+  // de propósito — não readicionar esses 2 IDs aqui, mesmo que a semana
+  // mude, a menos que o Pedro confirme explicitamente que não tem risco:
+  // - 120363410001684875@g.us ("É AMANHÃ - 16/09") — grupo Ao Vivo Ativo
+  // - 120363431176053725@g.us — grupo Gravado Ativo
 ];
 
 export function listarGruposLive1Reais() {
