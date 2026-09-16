@@ -180,8 +180,16 @@ const FLUXOS = [
   // (nina_web3) antes da live de terça, 22/09, às 8h. Cron fixo por data
   // (dia/mês), não por dia-da-semana recorrente, porque é um evento único
   // desta semana — desligar (toggle) ou apagar depois que passar.
-  { chave: "live1-abertura", nome: "Live 1 — Abertura (nome, foto, descrição, banner)", dia: "Terça, 15/09", trilha: "live1", cronPadrao: "0 14 15 9 *", executar: () => executarLive1Abertura(), defaults: TEXTOS_LIVE1_PADRAO["live1-abertura"] },
-  { chave: "live1-mensagem-gisleine", nome: "Live 1 — Mensagem da Gisleine (12h30)", dia: "Quarta, 16/09", trilha: "live1", cronPadrao: "30 12 16 9 *", executar: () => executarLive1MensagemGisleine(), defaults: TEXTOS_LIVE1_PADRAO["live1-mensagem-gisleine"] },
+  // Cron em lista de horários (não um horário único) só por hoje, 16/09:
+  // dispara a cada 30min entre 10h-21h, processando no máximo `loteMaximo`
+  // grupos pendentes por vez (campos editáveis) — evita rajada grande de
+  // download do mesmo banner no Google Drive, que passou a bloquear como
+  // abuso depois de ~10 downloads seguidos e travava o envio real da
+  // mensagem. Grupos já enviados com sucesso nunca são reprocessados
+  // (gruposPendentes olha o histórico inteiro). Depois de hoje, pode voltar
+  // a ser um horário único ou ser desligado pelo toggle "Automático".
+  { chave: "live1-abertura", nome: "Live 1 — Abertura (nome, foto, descrição, banner)", dia: "Terça, 15/09", trilha: "live1", cronPadrao: "0,30 10-21 16 9 *", executar: () => executarLive1Abertura(), defaults: TEXTOS_LIVE1_PADRAO["live1-abertura"] },
+  { chave: "live1-mensagem-gisleine", nome: "Live 1 — Mensagem da Gisleine (12h30)", dia: "Quarta, 16/09", trilha: "live1", cronPadrao: "15,45 10-21 16 9 *", executar: () => executarLive1MensagemGisleine(), defaults: TEXTOS_LIVE1_PADRAO["live1-mensagem-gisleine"] },
   { chave: "live1-audio1", nome: "Live 1 — Áudio 1 da Nina (10h)", dia: "Quinta, 17/09", trilha: "live1", cronPadrao: "0 10 17 9 *", executar: () => executarLive1Audio1(), defaults: TEXTOS_LIVE1_PADRAO["live1-audio1"] },
   { chave: "live1-enquete", nome: "Live 1 — Enquete (12h30)", dia: "Sexta, 18/09", trilha: "live1", cronPadrao: "30 12 18 9 *", executar: () => executarLive1Enquete(), defaults: TEXTOS_LIVE1_PADRAO["live1-enquete"] },
   { chave: "live1-audio2", nome: "Live 1 — Áudio 2 da Nina (10h)", dia: "Sábado, 19/09", trilha: "live1", cronPadrao: "0 10 19 9 *", executar: () => executarLive1Audio2(), defaults: TEXTOS_LIVE1_PADRAO["live1-audio2"] },

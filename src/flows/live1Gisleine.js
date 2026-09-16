@@ -103,9 +103,11 @@ async function tentarComoAdmin(rotulo, acao, avisos) {
 // legenda, que é o que precisa chegar independente das outras 3 falharem.
 export async function executarLive1Abertura({ log = console.log } = {}) {
   const campos = lerCamposDoFluxo("live1-abertura", TEXTOS_LIVE1_PADRAO["live1-abertura"]);
-  const grupos = gruposPendentes("live1-abertura", gruposAlvoLive1());
+  const pendentes = gruposPendentes("live1-abertura", gruposAlvoLive1());
+  const loteMaximo = Number(campos.loteMaximo) || pendentes.length;
+  const grupos = pendentes.slice(0, loteMaximo);
   const { registrar } = criarRegistrador("live1-abertura", log);
-  registrar("1. Grupos-alvo (nina_web3, fora de uso, ainda não enviados)", { total: grupos.length });
+  registrar("1. Grupos-alvo (nina_web3, fora de uso, ainda não enviados)", { pendentes: pendentes.length, nesteLote: grupos.length });
 
   if (!campos.fotoGrupoUrl || !campos.imagemUrl) {
     registrar("Pulado — falta configurar fotoGrupoUrl e/ou imagemUrl pelo painel");
@@ -127,16 +129,18 @@ export async function executarLive1Abertura({ log = console.log } = {}) {
       falha.push({ id: grupo.id, nome: grupo.nome, erro: err.message, avisos });
     }
   }
-  registrar("2. Concluído", { enviados: sucesso.length, falhas: falha.length });
-  return { total: grupos.length, sucesso, falha };
+  registrar("2. Concluído", { enviados: sucesso.length, falhas: falha.length, aindaFaltam: pendentes.length - grupos.length });
+  return { total: grupos.length, pendentesAntes: pendentes.length, sucesso, falha };
 }
 
 // Quarta 12h30 — banner com a mensagem que a Gisleine mandou pra Nina.
 export async function executarLive1MensagemGisleine({ log = console.log } = {}) {
   const campos = lerCamposDoFluxo("live1-mensagem-gisleine", TEXTOS_LIVE1_PADRAO["live1-mensagem-gisleine"]);
-  const grupos = gruposPendentes("live1-mensagem-gisleine", gruposAlvoLive1());
+  const pendentes = gruposPendentes("live1-mensagem-gisleine", gruposAlvoLive1());
+  const loteMaximo = Number(campos.loteMaximo) || pendentes.length;
+  const grupos = pendentes.slice(0, loteMaximo);
   const { registrar } = criarRegistrador("live1-mensagem-gisleine", log);
-  registrar("1. Grupos-alvo (ainda não enviados)", { total: grupos.length });
+  registrar("1. Grupos-alvo (ainda não enviados)", { pendentes: pendentes.length, nesteLote: grupos.length });
 
   if (!campos.imagemUrl) {
     registrar("Pulado — falta configurar imagemUrl pelo painel");
@@ -146,8 +150,8 @@ export async function executarLive1MensagemGisleine({ log = console.log } = {}) 
   const resultado = await paraCadaGrupo(grupos, (grupo) =>
     enviarImagem({ remoteJid: grupo.id, imagemUrl: campos.imagemUrl, legenda: campos.legenda })
   );
-  registrar("2. Concluído", { enviados: resultado.sucesso.length, falhas: resultado.falha.length });
-  return { total: grupos.length, ...resultado };
+  registrar("2. Concluído", { enviados: resultado.sucesso.length, falhas: resultado.falha.length, aindaFaltam: pendentes.length - grupos.length });
+  return { total: grupos.length, pendentesAntes: pendentes.length, ...resultado };
 }
 
 // Quinta 10h — áudio 1 (roteiro pra Nina gravar). Se ainda não tiver o
