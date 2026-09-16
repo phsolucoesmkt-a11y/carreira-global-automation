@@ -173,7 +173,7 @@ const FLUXOS = [
   { chave: "aovivo-ultima-mensagem", nome: "Ao Vivo — Última mensagem (noite)", dia: "Quinta-feira", trilha: "ao-vivo", cronPadrao: "0 19 * * 4", executar: () => executarUltimaMensagemAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-ultima-mensagem"] },
   { chave: "aovivo-22h", nome: "Ao Vivo — Lembrete 22h", dia: "Quinta-feira", trilha: "ao-vivo", cronPadrao: "0 22 * * 4", executar: () => executar22hAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-22h"] },
   { chave: "aovivo-grupo-encerrado", nome: "Ao Vivo — Grupo encerrado (renomeia)", dia: "Sexta-feira", trilha: "ao-vivo", cronPadrao: "15 8 * * 5", executar: () => executarGrupoEncerradoAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-grupo-encerrado"] },
-  { chave: "aovivo-checa-lotacao", nome: "Ao Vivo — Checa lotação (a cada 30min)", dia: "Contínuo", trilha: "ao-vivo", cronPadrao: "*/30 * * * *", executar: () => executarChecaLotacaoAoVivo(), defaults: null },
+  { chave: "aovivo-checa-lotacao", nome: "Ao Vivo — Checa lotação (a cada 30min)", dia: "Contínuo", trilha: "ao-vivo", cronPadrao: "*/30 * * * *", executar: () => executarChecaLotacaoAoVivo(), defaults: TEXTOS_AO_VIVO_PADRAO["aovivo-checa-lotacao"] },
   { chave: "interno-link-ao-vivo", nome: "Interno — Link Ao Vivo + Cobrança Nina", dia: "Sexta-feira", trilha: "interno", cronPadrao: "0 16 * * 5", executar: () => executarLinkAoVivoNina(), defaults: TEXTOS_INTERNO_PADRAO["interno-link-ao-vivo"] },
 
   // Campanha pontual "Live 1 · Gisleine" — reengajamento dos grupos antigos

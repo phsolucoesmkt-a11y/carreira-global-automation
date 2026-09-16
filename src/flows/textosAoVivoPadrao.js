@@ -221,4 +221,8 @@ export const TEXTOS_AO_VIVO_PADRAO = {
       "👉 carreiraglobal.net\n\n\n" +
       "Obrigada por estar aqui essa com a gente. De verdade.",
   },
+
+  "aovivo-checa-lotacao": {
+    limiteParticipantes: 951,
+  },
 };
