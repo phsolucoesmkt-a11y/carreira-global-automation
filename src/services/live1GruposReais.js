@@ -57,6 +57,21 @@ export const GRUPOS_LIVE1_REAIS = [
   { id: "120363431273697008@g.us", nome: "Grupo encerrado | Workshop Vagas Internacionais", linkPlanilha: "https://chat.whatsapp.com/EopFPHdqouiAq7CJ4D2Fc6" },
   { id: "120363429311239788@g.us", nome: "📣 Workshop Vagas Internacionais", linkPlanilha: null },
   { id: "120363431490793377@g.us", nome: "Grupo encerrado | Workshop Vagas Internacionais", linkPlanilha: "https://chat.whatsapp.com/B59nXBaPk0rGpAmU4DTLYh" },
+  // +10 grupos abaixo: bot (nina_web3) foi readicionado a esses grupos em
+  // 17/09 (antes marcados NAO na planilha original) — ainda não receberam
+  // a campanha de ontem (16/09). Nome/link confirmados direto na Evolution
+  // API (GET /group/fetchAllGroups + /group/inviteCode, bot já é admin em
+  // todos) em 17/09.
+  { id: "120363426616386383@g.us", nome: "Grupo encerrado | Workshop Vagas Internacionais", linkPlanilha: "https://chat.whatsapp.com/F4lgKjdcKeG9qCvHiQ6eTZ" },
+  { id: "120363427778125449@g.us", nome: "Grupo encerrado | Workshop Vagas Internacionais", linkPlanilha: "https://chat.whatsapp.com/BzHId9RPDUDDzDqVvb0iGe" },
+  { id: "120363408385558950@g.us", nome: "💥Grupo encerrado | Workshop Vagas Internacionais", linkPlanilha: "https://chat.whatsapp.com/FgbhJfblfBlG2OkkAmkQjL" },
+  { id: "120363411703051581@g.us", nome: "Última Chance - Workshop Vagas Internacionais", linkPlanilha: "https://chat.whatsapp.com/LP4zGgXyRRiBCEJXp3Kxz6" },
+  { id: "120363429177294947@g.us", nome: "Última chance | Workshop Vagas Internacionais", linkPlanilha: "https://chat.whatsapp.com/F5mndpF9vLHJRnhvWUBron" },
+  { id: "120363429536066426@g.us", nome: "Última chance | Workshop Vagas Internacionais", linkPlanilha: "https://chat.whatsapp.com/DQgEFAuBy6pEK3UxT2GqFf" },
+  { id: "120363412954149294@g.us", nome: "Grupo encerrado | Workshop Vagas Internacionais", linkPlanilha: "https://chat.whatsapp.com/LaGcuQKPDnVIchrWafXS7D" },
+  { id: "120363427856609948@g.us", nome: "Grupo encerrado | Workshop Vagas Internacionais", linkPlanilha: "https://chat.whatsapp.com/Hkd7xxnFenI3k5iHQPxFQA" },
+  { id: "120363412688426544@g.us", nome: "Grupo encerrado | Workshop Vagas Internacionais", linkPlanilha: "https://chat.whatsapp.com/Faue1AKvFxc9JVUzmdY0Nh" },
+  { id: "120363411836479514@g.us", nome: "Grupo encerrado | Workshop Vagas Internacionais", linkPlanilha: "https://chat.whatsapp.com/IqQp9e34xy90utFncARPJj" },
   // ATENÇÃO: os 2 grupos abaixo foram removidos de propósito porque são os
   // grupos ATIVOS de verdade da semana normal (Ao Vivo e Gravado) — não
   // podem NUNCA receber a campanha Live 1. Ficam de fora daqui como
