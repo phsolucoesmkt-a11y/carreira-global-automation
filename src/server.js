@@ -189,7 +189,7 @@ const FLUXOS = [
   // (gruposPendentes olha o histórico inteiro). Depois de hoje, pode voltar
   // a ser um horário único ou ser desligado pelo toggle "Automático".
   { chave: "live1-abertura", nome: "Live 1 — Abertura (nome, foto, descrição, banner)", dia: "Quarta, 16/09", trilha: "live1", cronPadrao: "*/15 * 16 9 *", executar: () => executarLive1Abertura(), defaults: TEXTOS_LIVE1_PADRAO["live1-abertura"] },
-  { chave: "live1-mensagem-gisleine", nome: "Live 1 — Mensagem da Gisleine (12h30)", dia: "Quarta, 16/09", trilha: "live1", cronPadrao: "15,45 10-21 16 9 *", executar: () => executarLive1MensagemGisleine(), defaults: TEXTOS_LIVE1_PADRAO["live1-mensagem-gisleine"] },
+  { chave: "live1-mensagem-gisleine", nome: "Live 1 — Mensagem da Gisleine", dia: "Sexta, 18/09", trilha: "live1", cronPadrao: "*/15 9-23 18 9 *", executar: () => executarLive1MensagemGisleine(), defaults: TEXTOS_LIVE1_PADRAO["live1-mensagem-gisleine"] },
   { chave: "live1-audio1", nome: "Live 1 — Áudio 1 da Nina (10h)", dia: "Quinta, 17/09", trilha: "live1", cronPadrao: "0 10 17 9 *", executar: () => executarLive1Audio1(), defaults: TEXTOS_LIVE1_PADRAO["live1-audio1"] },
   { chave: "live1-enquete", nome: "Live 1 — Enquete (12h30)", dia: "Sexta, 18/09", trilha: "live1", cronPadrao: "30 12 18 9 *", executar: () => executarLive1Enquete(), defaults: TEXTOS_LIVE1_PADRAO["live1-enquete"] },
   { chave: "live1-audio2", nome: "Live 1 — Áudio 2 da Nina (10h)", dia: "Sábado, 19/09", trilha: "live1", cronPadrao: "0 10 19 9 *", executar: () => executarLive1Audio2(), defaults: TEXTOS_LIVE1_PADRAO["live1-audio2"] },
