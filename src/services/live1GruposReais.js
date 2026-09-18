@@ -83,6 +83,21 @@ export const GRUPOS_LIVE1_REAIS = [
   // - 120363431176053725@g.us — grupo Gravado Ativo
 ];
 
+// Grupos que NUNCA recebem a campanha Live 1, independente do status deles
+// na árvore (o filtro dinâmico só protege quem está "Ativo", e o grupo de um
+// workshop vira "Inativo" logo depois que ele acaba — foi assim que os dois
+// Ao Vivo de quarta/quinta ficaram desprotegidos em 18/09).
+const GRUPOS_PROTEGIDOS = new Set([
+  // Workshops da semana de 16-17/09 e o próximo (proteção pedida pelo Pedro)
+  "120363410001684875@g.us", // Ao Vivo de quarta 16/09
+  "120363430976677503@g.us", // Ao Vivo de quinta 17/09 (criado por lotação)
+  "120363431176053725@g.us", // Gravado da semana
+  "120363410825254135@g.us", // Ao Vivo do próximo workshop (criado 18/09)
+  // Fora de propósito, não são grupos de lead
+  "120363429311239788@g.us", // reserva com 4 membros — renomear atrapalharia o funil
+  "120363425912288633@g.us", // bot saiu do grupo — envio não chegaria
+]);
+
 export function listarGruposLive1Reais() {
-  return GRUPOS_LIVE1_REAIS;
+  return GRUPOS_LIVE1_REAIS.filter((g) => !GRUPOS_PROTEGIDOS.has(g.id));
 }
