@@ -36,7 +36,8 @@ export const TEXTOS_LIVE1_PADRAO = {
   },
 
   "live1-audio1": {
-    audioUrl: "",
+    loteMaximo: 1,
+    audioUrl: "https://drive.google.com/file/d/1VO7Bv0TwZbZg5HtjbsmoX6olxgkXhWER/view?usp=sharing",
     roteiro:
       "Oi, aqui é a Nina! Você deve ter visto aqui no grupo: terça que vem, dia 22, às 8 da manhã, eu vou entrar ao vivo com a Gisleine. " +
       "Ela foi contratada como Finance Analyst por uma empresa americana. E sabe o que eu mais gosto dessa história? A Gisleine é da área de finanças. " +

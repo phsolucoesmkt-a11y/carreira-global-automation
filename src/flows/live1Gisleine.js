@@ -163,9 +163,11 @@ export async function executarLive1MensagemGisleine({ log = console.log } = {}) 
 // como reserva (ver executarLive1Audio2).
 export async function executarLive1Audio1({ log = console.log } = {}) {
   const campos = lerCamposDoFluxo("live1-audio1", TEXTOS_LIVE1_PADRAO["live1-audio1"]);
-  const grupos = gruposPendentes("live1-audio1", gruposAlvoLive1());
+  const pendentes = gruposPendentes("live1-audio1", gruposAlvoLive1());
+  const loteMaximo = Number(campos.loteMaximo) || 1;
+  const grupos = pendentes.slice(0, loteMaximo);
   const { registrar } = criarRegistrador("live1-audio1", log);
-  registrar("1. Grupos-alvo (ainda não enviados)", { total: grupos.length });
+  registrar("1. Grupos-alvo (ainda não enviados)", { pendentes: pendentes.length, nesteLote: grupos.length });
 
   if (!campos.audioUrl) {
     registrar("Pulado — áudio 1 ainda não gravado/configurado");
@@ -173,8 +175,8 @@ export async function executarLive1Audio1({ log = console.log } = {}) {
   }
 
   const resultado = await paraCadaGrupo(grupos, (grupo) => enviarAudio({ remoteJid: grupo.id, audioUrl: campos.audioUrl }));
-  registrar("2. Concluído", { enviados: resultado.sucesso.length, falhas: resultado.falha.length });
-  return { enviado: true, total: grupos.length, ...resultado };
+  registrar("2. Concluído", { enviados: resultado.sucesso.length, falhas: resultado.falha.length, aindaFaltam: pendentes.length - grupos.length });
+  return { enviado: true, total: grupos.length, pendentesAntes: pendentes.length, ...resultado };
 }
 
 // Sexta 12h30 — enquete sobre o que perguntar pra Gisleine.
