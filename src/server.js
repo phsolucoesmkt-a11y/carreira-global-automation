@@ -191,7 +191,7 @@ const FLUXOS = [
   { chave: "live1-abertura", nome: "Live 1 — Abertura (nome, foto, descrição, banner)", dia: "Quarta, 16/09", trilha: "live1", cronPadrao: "*/15 * 16 9 *", executar: () => executarLive1Abertura(), defaults: TEXTOS_LIVE1_PADRAO["live1-abertura"] },
   { chave: "live1-mensagem-gisleine", nome: "Live 1 — Mensagem da Gisleine", dia: "Sábado, 19/09", trilha: "live1", cronPadrao: "*/15 9-23 19 9 *", executar: () => executarLive1MensagemGisleine(), defaults: TEXTOS_LIVE1_PADRAO["live1-mensagem-gisleine"] },
   { chave: "live1-audio1", nome: "Live 1 — Áudio 1 da Nina (1 grupo a cada 10min)", dia: "Sábado, 19/09", trilha: "live1", cronPadrao: "*/10 * 19,20 9 *", executar: () => executarLive1Audio1(), defaults: TEXTOS_LIVE1_PADRAO["live1-audio1"] },
-  { chave: "live1-enquete", nome: "Live 1 — Enquete (1 grupo a cada 10min)", dia: "Domingo, 20/09", trilha: "live1", cronPadrao: "*/10 * 20,21 9 *", executar: () => executarLive1Enquete(), defaults: TEXTOS_LIVE1_PADRAO["live1-enquete"] },
+  { chave: "live1-enquete", nome: "Live 1 — Enquete (1 grupo a cada 10min, das 8h às 23h)", dia: "Domingo 20/09 e Segunda 21/09", trilha: "live1", cronPadrao: "*/10 8-22 20,21 9 *", executar: () => executarLive1Enquete(), defaults: TEXTOS_LIVE1_PADRAO["live1-enquete"] },
   { chave: "live1-audio2", nome: "Live 1 — Áudio 2 da Nina (10h)", dia: "Sábado, 19/09", trilha: "live1", cronPadrao: "0 10 19 9 *", executar: () => executarLive1Audio2(), defaults: TEXTOS_LIVE1_PADRAO["live1-audio2"] },
 ];
 
