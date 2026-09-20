@@ -49,6 +49,10 @@ export const TEXTOS_LIVE1_PADRAO = {
     loteMaximo: 1,
     multiplaEscolha: true,
     opcoesPorEnquete: 6,
+    mensagemApoio:
+      "Pessoal, na terça, às 8h, a Nina responde ao vivo as perguntas que vocês mais quiserem ouvir da Gisleine. 🎙️\n\n" +
+      "Como são muitas, separamos em 2 enquetes logo abaixo. Marque quantas quiser, nas duas. 👇\n\n" +
+      "A mais votada a Nina faz ao vivo e conta que foi escolha de vocês.",
     enquetePergunta: "Na terça, a Nina faz ao vivo a pergunta mais votada aqui. O que você quer que a Gisleine responda? 👇",
     enqueteOpcoes: [
       "Quanto tempo levou do primeiro ajuste até a proposta?",

@@ -10,6 +10,7 @@ import {
   atualizarImagemDoGrupo,
   atualizarDescricaoDoGrupo,
   enviarImagem,
+  enviarTexto,
   enviarEnquete,
   enviarAudio,
 } from "../services/evolution.js";
@@ -195,36 +196,49 @@ export async function executarLive1Enquete({ log = console.log } = {}) {
   const blocos = [];
   for (let i = 0; i < campos.enqueteOpcoes.length; i += tamanhoBloco) blocos.push(campos.enqueteOpcoes.slice(i, i + tamanhoBloco));
 
-  // Se a 1ª enquete sai e a 2ª falha, o grupo NÃO vira "falha": senão a 1ª
-  // seria reenviada na próxima rodada e o grupo receberia duplicada. Fica
-  // registrado em `parciais` pra reenviar só a que faltou.
+  // Ordem por grupo: texto de apoio (explica que são 2 enquetes) e depois as
+  // enquetes. Só o 1º passo decide se o grupo é "falha": se ele falha, nada
+  // saiu e a próxima rodada tenta de novo sem duplicar. Se o 1º sai e um
+  // passo seguinte falha 3 vezes, o grupo NÃO vira "falha" (senão o 1º
+  // passo seria reenviado e duplicaria): fica em `parciais` pra reenviar só
+  // o que faltou.
+  const passos = [];
+  if (campos.mensagemApoio) {
+    passos.push({ rotulo: "texto de apoio", enviar: (g) => enviarTexto({ remoteJid: g.id, texto: campos.mensagemApoio }) });
+  }
+  blocos.forEach((bloco, i) => {
+    passos.push({
+      rotulo: `enquete ${i + 1}`,
+      enviar: (g) =>
+        enviarEnquete({
+          remoteJid: g.id,
+          pergunta: campos.enquetePergunta,
+          opcoes: bloco,
+          selectableCount: campos.multiplaEscolha ? bloco.length : 1,
+        }),
+    });
+  });
+
   const parciais = [];
   const resultado = await paraCadaGrupo(grupos, async (grupo) => {
-    for (let i = 0; i < blocos.length; i++) {
-      const enviar = () =>
-        enviarEnquete({
-          remoteJid: grupo.id,
-          pergunta: campos.enquetePergunta,
-          opcoes: blocos[i],
-          selectableCount: campos.multiplaEscolha ? blocos[i].length : 1,
-        });
+    for (let i = 0; i < passos.length; i++) {
       if (i === 0) {
-        await enviar();
+        await passos[i].enviar(grupo);
         continue;
       }
-      let enviada = false;
-      for (let tentativa = 1; tentativa <= 3 && !enviada; tentativa++) {
+      let enviado = false;
+      for (let tentativa = 1; tentativa <= 3 && !enviado; tentativa++) {
         try {
-          await enviar();
-          enviada = true;
+          await passos[i].enviar(grupo);
+          enviado = true;
         } catch (err) {
-          if (tentativa === 3) parciais.push({ id: grupo.id, enquete: i + 1, erro: err.message });
+          if (tentativa === 3) parciais.push({ id: grupo.id, passo: passos[i].rotulo, erro: err.message });
         }
       }
     }
   });
   registrar("2. Concluído", { enviados: resultado.sucesso.length, falhas: resultado.falha.length, parciais: parciais.length, aindaFaltam: pendentes.length - grupos.length });
-  return { total: grupos.length, pendentesAntes: pendentes.length, enquetesPorGrupo: blocos.length, ...resultado, parciais };
+  return { total: grupos.length, pendentesAntes: pendentes.length, mensagensPorGrupo: passos.length, ...resultado, parciais };
 }
 
 // Sábado 10h — áudio 2. Regra do roteiro: se o áudio 1 não saiu na quinta
