@@ -129,13 +129,13 @@ export async function enviarImagem({ remoteJid, imagemUrl, legenda }) {
 }
 
 // Espelha "Enviar enquete2".
-export async function enviarEnquete({ remoteJid, pergunta, opcoes }) {
+export async function enviarEnquete({ remoteJid, pergunta, opcoes, selectableCount = 1 }) {
   return call(`/message/sendPoll/${INSTANCE}`, {
     method: "POST",
     body: JSON.stringify({
       number: remoteJid,
       name: pergunta,
-      selectableCount: 1,
+      selectableCount,
       values: opcoes,
     }),
   });

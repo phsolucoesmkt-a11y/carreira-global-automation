@@ -182,15 +182,19 @@ export async function executarLive1Audio1({ log = console.log } = {}) {
 // Sexta 12h30 — enquete sobre o que perguntar pra Gisleine.
 export async function executarLive1Enquete({ log = console.log } = {}) {
   const campos = lerCamposDoFluxo("live1-enquete", TEXTOS_LIVE1_PADRAO["live1-enquete"]);
-  const grupos = gruposPendentes("live1-enquete", gruposAlvoLive1());
+  const pendentes = gruposPendentes("live1-enquete", gruposAlvoLive1());
+  const loteMaximo = Number(campos.loteMaximo) || 1;
+  const grupos = pendentes.slice(0, loteMaximo);
   const { registrar } = criarRegistrador("live1-enquete", log);
-  registrar("1. Grupos-alvo (ainda não enviados)", { total: grupos.length });
+  registrar("1. Grupos-alvo (ainda não enviados)", { pendentes: pendentes.length, nesteLote: grupos.length });
 
+  // Enquete de múltipla escolha: o participante pode marcar quantas quiser.
+  const selectableCount = campos.multiplaEscolha ? campos.enqueteOpcoes.length : 1;
   const resultado = await paraCadaGrupo(grupos, (grupo) =>
-    enviarEnquete({ remoteJid: grupo.id, pergunta: campos.enquetePergunta, opcoes: campos.enqueteOpcoes })
+    enviarEnquete({ remoteJid: grupo.id, pergunta: campos.enquetePergunta, opcoes: campos.enqueteOpcoes, selectableCount })
   );
-  registrar("2. Concluído", { enviados: resultado.sucesso.length, falhas: resultado.falha.length });
-  return { total: grupos.length, ...resultado };
+  registrar("2. Concluído", { enviados: resultado.sucesso.length, falhas: resultado.falha.length, aindaFaltam: pendentes.length - grupos.length });
+  return { total: grupos.length, pendentesAntes: pendentes.length, ...resultado };
 }
 
 // Sábado 10h — áudio 2. Regra do roteiro: se o áudio 1 não saiu na quinta

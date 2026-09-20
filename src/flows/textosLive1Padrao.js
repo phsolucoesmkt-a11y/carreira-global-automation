@@ -46,13 +46,22 @@ export const TEXTOS_LIVE1_PADRAO = {
   },
 
   "live1-enquete": {
+    loteMaximo: 1,
+    multiplaEscolha: true,
     enquetePergunta: "Na terça, a Nina faz ao vivo a pergunta mais votada aqui. O que você quer que a Gisleine responda? 👇",
     enqueteOpcoes: [
-      "Como entrou numa empresa americana sendo de finanças?",
-      "Quanto de inglês ela precisou?",
-      "O que mudou no LinkedIn dela?",
-      "Como foi a entrevista?",
-      "Como é a rotina trabalhando pra fora?",
+      "Quanto tempo levou do primeiro ajuste até a proposta?",
+      "Quantas vagas ela aplicou até essa dar certo?",
+      "Como ela achou essa vaga?",
+      "O que ela respondeu quando pediram experiência internacional?",
+      "Como ela explicou empresas brasileiras que ninguém lá fora conhece?",
+      "Como ela falou de salário sem se vender barato?",
+      "Como funciona o contrato e como o dinheiro chega?",
+      "O que quase fez ela desistir?",
+      "Como ela segura uma reunião em inglês quando não entende tudo?",
+      "O que ela faria diferente se começasse hoje?",
+      "O que mudou na vida dela no primeiro mês?",
+      "O que ela diria pra quem acha que isso é só pra quem é de tecnologia?",
     ],
   },
 
