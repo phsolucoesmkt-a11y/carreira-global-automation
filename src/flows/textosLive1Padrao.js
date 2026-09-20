@@ -48,6 +48,7 @@ export const TEXTOS_LIVE1_PADRAO = {
   "live1-enquete": {
     loteMaximo: 1,
     multiplaEscolha: true,
+    opcoesPorEnquete: 6,
     enquetePergunta: "Na terça, a Nina faz ao vivo a pergunta mais votada aqui. O que você quer que a Gisleine responda? 👇",
     enqueteOpcoes: [
       "Quanto tempo levou do primeiro ajuste até a proposta?",

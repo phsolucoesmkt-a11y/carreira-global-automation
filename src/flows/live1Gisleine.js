@@ -188,13 +188,43 @@ export async function executarLive1Enquete({ log = console.log } = {}) {
   const { registrar } = criarRegistrador("live1-enquete", log);
   registrar("1. Grupos-alvo (ainda não enviados)", { pendentes: pendentes.length, nesteLote: grupos.length });
 
-  // Enquete de múltipla escolha: o participante pode marcar quantas quiser.
-  const selectableCount = campos.multiplaEscolha ? campos.enqueteOpcoes.length : 1;
-  const resultado = await paraCadaGrupo(grupos, (grupo) =>
-    enviarEnquete({ remoteJid: grupo.id, pergunta: campos.enquetePergunta, opcoes: campos.enqueteOpcoes, selectableCount })
-  );
-  registrar("2. Concluído", { enviados: resultado.sucesso.length, falhas: resultado.falha.length, aindaFaltam: pendentes.length - grupos.length });
-  return { total: grupos.length, pendentesAntes: pendentes.length, ...resultado };
+  // A Evolution API só aceita até 10 opções por enquete (o WhatsApp aceita
+  // 12), então a lista é dividida em blocos e cada bloco vira uma enquete com
+  // a mesma pergunta. Múltipla escolha: dá pra marcar todas as do bloco.
+  const tamanhoBloco = Math.min(Number(campos.opcoesPorEnquete) || campos.enqueteOpcoes.length, 10);
+  const blocos = [];
+  for (let i = 0; i < campos.enqueteOpcoes.length; i += tamanhoBloco) blocos.push(campos.enqueteOpcoes.slice(i, i + tamanhoBloco));
+
+  // Se a 1ª enquete sai e a 2ª falha, o grupo NÃO vira "falha": senão a 1ª
+  // seria reenviada na próxima rodada e o grupo receberia duplicada. Fica
+  // registrado em `parciais` pra reenviar só a que faltou.
+  const parciais = [];
+  const resultado = await paraCadaGrupo(grupos, async (grupo) => {
+    for (let i = 0; i < blocos.length; i++) {
+      const enviar = () =>
+        enviarEnquete({
+          remoteJid: grupo.id,
+          pergunta: campos.enquetePergunta,
+          opcoes: blocos[i],
+          selectableCount: campos.multiplaEscolha ? blocos[i].length : 1,
+        });
+      if (i === 0) {
+        await enviar();
+        continue;
+      }
+      let enviada = false;
+      for (let tentativa = 1; tentativa <= 3 && !enviada; tentativa++) {
+        try {
+          await enviar();
+          enviada = true;
+        } catch (err) {
+          if (tentativa === 3) parciais.push({ id: grupo.id, enquete: i + 1, erro: err.message });
+        }
+      }
+    }
+  });
+  registrar("2. Concluído", { enviados: resultado.sucesso.length, falhas: resultado.falha.length, parciais: parciais.length, aindaFaltam: pendentes.length - grupos.length });
+  return { total: grupos.length, pendentesAntes: pendentes.length, enquetesPorGrupo: blocos.length, ...resultado, parciais };
 }
 
 // Sábado 10h — áudio 2. Regra do roteiro: se o áudio 1 não saiu na quinta
