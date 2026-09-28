@@ -34,7 +34,7 @@ import { lerModeloCompleto, definirModeloDoGrupo, listarArvoreDeGrupos, buscarGr
 import { buscarParticipantesDoGrupo } from "./services/evolution.js";
 import { registrarExecucao, listarExecucoes, ultimaExecucaoPorFluxo } from "./services/execucoes.js";
 import { createSessionToken, verifySessionToken, parseCookies } from "./services/session.js";
-import { lerCamposDoFluxo, salvarCamposDoFluxo, lerCronDoFluxo, salvarCronDoFluxo, lerAtivoDoFluxo, salvarAtivoDoFluxo, lerConfiguracao, definirConfiguracao } from "./services/config.js";
+import { lerCamposDoFluxo, salvarCamposDoFluxo, lerCronDoFluxo, salvarCronDoFluxo, lerAtivoDoFluxo, salvarAtivoDoFluxo, lerConfiguracao, definirConfiguracao, garantirPausadoNaCriacao } from "./services/config.js";
 import { LINK_DA_LIVE_PADRAO, LINK_REPLAY_PADRAO } from "./services/linkDaLive.js";
 import { cronParaTexto } from "./services/cronTexto.js";
 import { listarGruposBlackFriday, resumoInstanciasBlackFriday } from "./services/blackFriday.js";
@@ -96,6 +96,13 @@ import { LINK_AO_VIVO_PADRAO } from "./services/linkAoVivo.js";
 // Trilha Interno — grupo fixo da equipe, nunca um grupo de lead.
 import { executarLinkAoVivoNina } from "./flows/interno/linkAoVivoNina.js";
 import { TEXTOS_INTERNO_PADRAO } from "./flows/textosInternoPadrao.js";
+
+// Recuperação de leads (formulário Meta -> template WhatsApp Cloud API).
+import { executarRecuperacaoLeads, CHAVE_RECUPERACAO } from "./flows/recuperacaoLeads.js";
+import { executarSincronizarMembros, CHAVE_SYNC_MEMBROS } from "./flows/sincronizarMembros.js";
+import { TEXTOS_RECUPERACAO_PADRAO } from "./flows/textosRecuperacaoPadrao.js";
+import { cloudApiConfigurada } from "./services/whatsappCloud.js";
+import { db } from "./db.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -193,7 +200,17 @@ const FLUXOS = [
   { chave: "live1-audio1", nome: "Live 1 — Áudio 1 da Nina (1 grupo a cada 10min)", dia: "Sábado, 19/09", trilha: "live1", cronPadrao: "*/10 * 19,20 9 *", executar: () => executarLive1Audio1(), defaults: TEXTOS_LIVE1_PADRAO["live1-audio1"] },
   { chave: "live1-enquete", nome: "Live 1 — Enquete (1 grupo a cada 10min, das 8h às 23h)", dia: "Domingo 20/09 e Segunda 21/09", trilha: "live1", cronPadrao: "*/10 8-22 20,21 9 *", executar: () => executarLive1Enquete(), defaults: TEXTOS_LIVE1_PADRAO["live1-enquete"] },
   { chave: "live1-audio2", nome: "Live 1 — Áudio 2 da Nina (10h)", dia: "Sábado, 19/09", trilha: "live1", cronPadrao: "0 10 19 9 *", executar: () => executarLive1Audio2(), defaults: TEXTOS_LIVE1_PADRAO["live1-audio2"] },
+
+  // Recuperação de leads: quem preencheu o formulário do Meta e não entrou
+  // no grupo recebe um template oficial. Nasce pausado e em modo simulação.
+  // Guarda no banco quem está nos grupos Ativos (única parte que fala com a
+  // Evolution). A recuperação só compara tabelas. Nasce pausado.
+  { chave: CHAVE_SYNC_MEMBROS, nome: "Recuperação — Sincronizar membros dos grupos", dia: "Todo dia, a cada 10 min", trilha: "recuperacao", cronPadrao: "*/10 * * * *", executar: () => executarSincronizarMembros(), defaults: null },
+  { chave: CHAVE_RECUPERACAO, nome: "Recuperação de leads (template Meta)", dia: "Todo dia, 9h às 21h", trilha: "recuperacao", cronPadrao: "*/5 9-20 * * *", executar: () => executarRecuperacaoLeads(), defaults: TEXTOS_RECUPERACAO_PADRAO[CHAVE_RECUPERACAO] },
 ];
+
+garantirPausadoNaCriacao(CHAVE_RECUPERACAO);
+garantirPausadoNaCriacao(CHAVE_SYNC_MEMBROS);
 
 // Trava por chave de fluxo — impede que cron automático e clique manual (ou
 // duas execuções automáticas quase simultâneas) rodem o MESMO fluxo ao mesmo
@@ -439,6 +456,54 @@ app.put("/api/fluxos/:chave/editar", (req, res) => {
     agendarFluxo(fluxo);
   }
   res.json({ ok: true });
+});
+
+
+// ---- Recuperação de leads ----
+const TRILHAS_RECUPERACAO = ["ao-vivo", "gravado"];
+
+app.get("/api/recuperacao/forms", (_req, res) => {
+  res.json({ forms: db.prepare(`SELECT * FROM meta_forms ORDER BY criado_em DESC`).all() });
+});
+
+// Cadastra/atualiza o mapeamento formulário -> trilha (upsert por form_id).
+app.put("/api/recuperacao/forms/:formId", (req, res) => {
+  const { trilha, nome, ativo } = req.body ?? {};
+  if (!TRILHAS_RECUPERACAO.includes(trilha)) return res.status(400).json({ error: "Campo 'trilha' precisa ser 'ao-vivo' ou 'gravado'." });
+  db.prepare(
+    `INSERT INTO meta_forms (form_id, trilha, nome, ativo) VALUES (?, ?, ?, ?)
+     ON CONFLICT(form_id) DO UPDATE SET trilha = excluded.trilha, nome = excluded.nome, ativo = excluded.ativo`
+  ).run(req.params.formId, trilha, nome ?? null, ativo === false ? 0 : 1);
+  res.json({ ok: true });
+});
+
+app.delete("/api/recuperacao/forms/:formId", (req, res) => {
+  db.prepare(`DELETE FROM meta_forms WHERE form_id = ?`).run(req.params.formId);
+  res.json({ ok: true });
+});
+
+function mascararTelefone(t) {
+  return t ? `${t.slice(0, 4)}****${t.slice(-4)}` : null;
+}
+
+// Painel: contagem por trilha/status + últimos leads (telefone mascarado) +
+// se as credenciais do Meta estão presentes (só booleanos, nunca o valor).
+app.get("/api/recuperacao/resumo", (_req, res) => {
+  const contagem = db.prepare(`SELECT trilha, status, COUNT(*) AS total FROM leads_meta GROUP BY trilha, status`).all();
+  const recentes = db
+    .prepare(`SELECT leadgen_id, trilha, nome, telefone, criado_meta_em, status, erro, enviado_em FROM leads_meta ORDER BY criado_meta_em DESC LIMIT 100`)
+    .all()
+    .map((l) => ({ ...l, telefone: mascararTelefone(l.telefone) }));
+  const sync = db.prepare(`SELECT trilha, sincronizado_em, total, erro, tentado_em FROM sync_membros`).all();
+  res.json({
+    contagem,
+    sync,
+    recentes,
+    credenciais: {
+      cloudApi: cloudApiConfigurada(),
+      leads: Boolean(process.env.META_LEADS_TOKEN || process.env.META_WA_TOKEN),
+    },
+  });
 });
 
 // Link da live: um lugar só que atualiza todo fluxo que referencia
