@@ -57,3 +57,10 @@ export function salvarAtivoDoFluxo(chave, ativo) {
      ON CONFLICT(chave) DO UPDATE SET ativo = excluded.ativo, atualizado_em = datetime('now')`
   ).run(chave, ativo ? 1 : 0);
 }
+
+// Fluxo novo (que dispara mensagem de verdade) nasce PAUSADO: só cria a
+// linha se ela ainda não existe, então nunca desfaz uma escolha já feita no
+// painel e nunca liga sozinho num deploy.
+export function garantirPausadoNaCriacao(chave) {
+  db.prepare(`INSERT OR IGNORE INTO fluxos_config (chave, ativo, atualizado_em) VALUES (?, 0, datetime('now'))`).run(chave);
+}
