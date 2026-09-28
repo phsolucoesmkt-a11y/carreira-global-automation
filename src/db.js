@@ -63,7 +63,6 @@ CREATE TABLE IF NOT EXISTS fluxos_config (
   campos TEXT,
   atualizado_em TEXT NOT NULL DEFAULT (datetime('now'))
 );
-
 -- Trilha "Ao Vivo": grupo, molde e árvore completamente separados do
 -- Gravado (grupos diferentes, cadência diferente, link diferente).
 CREATE TABLE IF NOT EXISTS grupo_modelo_ao_vivo (
@@ -90,6 +89,64 @@ CREATE TABLE IF NOT EXISTS arvore_grupos_ao_vivo (
   participantes_atualizado_em TEXT,
   criado_em TEXT NOT NULL DEFAULT (datetime('now')),
   atualizado_em TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Recuperação de leads: formulários instantâneos do Meta (cada form_id
+-- pertence a UMA trilha) e os leads puxados de lá. O sistema cruza o telefone
+-- do lead com os membros dos grupos Ativos da trilha e manda um template
+-- oficial do WhatsApp pra quem se cadastrou e não entrou no grupo.
+CREATE TABLE IF NOT EXISTS meta_forms (
+  form_id TEXT PRIMARY KEY,
+  trilha TEXT NOT NULL CHECK (trilha IN ('ao-vivo', 'gravado')),
+  nome TEXT,
+  ativo INTEGER NOT NULL DEFAULT 1,
+  criado_em TEXT NOT NULL DEFAULT (datetime('now'))
+);
+-- status: novo | no_grupo | enviando | enviado | falha | sem_whatsapp |
+-- duplicado | expirado. "enviando" nunca é reenviado sozinho (se o processo
+-- caiu no meio, não dá pra saber se o template saiu).
+CREATE TABLE IF NOT EXISTS leads_meta (
+  leadgen_id TEXT PRIMARY KEY,
+  form_id TEXT NOT NULL,
+  trilha TEXT NOT NULL,
+  nome TEXT,
+  telefone TEXT,
+  telefone_chave TEXT,
+  campaign_id TEXT,
+  ad_id TEXT,
+  criado_meta_em TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'novo',
+  tentativas INTEGER NOT NULL DEFAULT 0,
+  wa_message_id TEXT,
+  erro TEXT,
+  enviado_em TEXT,
+  atualizado_em TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_leads_meta_status ON leads_meta (trilha, status, criado_meta_em);
+CREATE INDEX IF NOT EXISTS idx_leads_meta_chave ON leads_meta (telefone_chave);
+
+-- Quem entrou em cada grupo (telefone normalizado). Alimentada pela
+-- sincronização de membros; a recuperação de leads consulta SÓ esta tabela,
+-- nunca a Evolution. Quem entrou e saiu continua aqui (nunca reenviar).
+CREATE TABLE IF NOT EXISTS membros_grupos (
+  group_id TEXT NOT NULL,
+  trilha TEXT NOT NULL,
+  telefone_chave TEXT NOT NULL,
+  telefone TEXT NOT NULL,
+  primeira_vez_em TEXT NOT NULL DEFAULT (datetime('now')),
+  visto_em TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (group_id, telefone_chave)
+);
+CREATE INDEX IF NOT EXISTS idx_membros_chave ON membros_grupos (telefone_chave);
+-- Última sincronização COMPLETA de membros por trilha e quais grupos ela
+-- cobriu. Sem sincronização recente a recuperação não envia nada.
+CREATE TABLE IF NOT EXISTS sync_membros (
+  trilha TEXT PRIMARY KEY,
+  sincronizado_em TEXT,
+  grupos TEXT,
+  total INTEGER,
+  erro TEXT,
+  tentado_em TEXT
 );
 `);
 
