@@ -192,6 +192,7 @@
       <div class="navitem" data-view="overview"><span>Visão Geral</span></div>
       <div class="navitem" data-view="fluxos"><span>Fluxos</span></div>
       <div class="navitem" data-view="grupos"><span>Grupos</span></div>
+      <div class="navitem" data-view="recuperacao"><span>Recuperação</span></div>
       <div class="navitem" data-view="black-friday"><span>Black Friday</span></div>
       <div class="navitem" data-view="editar"><span>Editar</span></div>
       <div class="navitem" data-view="config"><span>Configurações</span></div>
@@ -221,6 +222,7 @@ let state = {
   trilhaGrupos: 'gravado', trilhaEditar: 'gravado', trilhaFluxos: 'gravado',
   gruposAoVivo: [], modeloAoVivo: null,
   gruposBlackFriday: [], resumoBlackFriday: { total: 0, porInstancia: {} },
+  recuperacaoForms: [], recuperacaoResumo: null,
 };
 
 function endpointsTrilha(trilha) {
@@ -268,7 +270,7 @@ async function checarStatus() {
 }
 
 async function carregarTudo() {
-  const [fluxosRes, gruposRes, modeloRes, meRes, linkRes, replayRes, linkAoVivoRes, gruposAoVivoRes, modeloAoVivoRes, redirectModoRes, blackFridayRes, live1ModoRes] = await Promise.all([
+  const [fluxosRes, gruposRes, modeloRes, meRes, linkRes, replayRes, linkAoVivoRes, gruposAoVivoRes, modeloAoVivoRes, redirectModoRes, blackFridayRes, live1ModoRes, recForms, recResumo] = await Promise.all([
     api('/api/fluxos'),
     api('/api/arvore-grupos'),
     api('/api/grupo-modelo'),
@@ -281,6 +283,8 @@ async function carregarTudo() {
     api('/api/config/redirect-modo'),
     api('/api/grupos-black-friday'),
     api('/api/config/live1-modo'),
+    api('/api/recuperacao/forms'),
+    api('/api/recuperacao/resumo'),
   ]);
   state.fluxos = fluxosRes.fluxos;
   state.grupos = gruposRes.grupos;
@@ -295,6 +299,8 @@ async function carregarTudo() {
   state.gruposBlackFriday = blackFridayRes.grupos;
   state.resumoBlackFriday = blackFridayRes.resumo;
   state.live1Modo = live1ModoRes.modo;
+  state.recuperacaoForms = recForms.forms;
+  state.recuperacaoResumo = recResumo;
 }
 
 function renderMiniRow(f) {
@@ -350,7 +356,11 @@ function campoLabel(chave) {
     audioUrl: 'URL do áudio (link do Google Drive, depois de gravado)',
     roteiro: 'Roteiro pra Nina gravar (referência, não é enviado)',
     limiteParticipantes: 'Limite de participantes (cria grupo extra ao atingir)',
-    loteMaximo: 'Máximo de grupos por execução (evita bloqueio de download em massa da imagem)',
+    loteMaximo: 'Máximo por execução (grupos, ou templates na Recuperação)',
+    modo: 'Modo: simulacao (só calcula) ou real (envia de verdade)',
+    templateAoVivo: 'Nome do template aprovado — Ao Vivo', templateGravado: 'Nome do template aprovado — Gravado',
+    frescorMinutos: 'Só envia se os membros dos grupos foram sincronizados há menos de X minutos', idioma: 'Idioma do template (ex: pt_BR)', botaoSufixoAoVivo: 'Botão de URL dinâmica — sufixo Ao Vivo (ex: ao-vivo-oficial; vazio se a URL for fixa)', botaoSufixoGravado: 'Botão de URL dinâmica — sufixo Gravado (ex: ao-vivo-2; vazio se a URL for fixa)', esperaMinutos: 'Esperar X minutos após o cadastro antes de recuperar',
+    janelaHoras: 'Ignorar leads com mais de X horas',
   };
   return nomes[chave] || chave;
 }
@@ -700,12 +710,68 @@ function renderUsuarios() {
   `;
 }
 
+
+const STATUS_LEAD = {
+  novo: ['Aguardando', 'pendente'], no_grupo: ['Já no grupo', 'ativo'], enviando: ['Enviando', 'pendente'],
+  enviado: ['Template enviado', 'sucesso'], falha: ['Falha', 'erro'], sem_whatsapp: ['Sem WhatsApp', 'inativo'],
+  sem_telefone: ['Sem telefone', 'inativo'], duplicado: ['Duplicado', 'inativo'], expirado: ['Expirado', 'inativo'],
+};
+
+function badgeLead(status) {
+  const [rotulo, cls] = STATUS_LEAD[status] || [status, 'sem-dados'];
+  return `<span class="badge ${cls}">${rotulo}</span>`;
+}
+
+function renderRecuperacao() {
+  const r = state.recuperacaoResumo || { contagem: [], recentes: [], credenciais: {} };
+  const fluxo = state.fluxos.find(f => f.chave === 'recuperacao-leads');
+  const fluxoSync = state.fluxos.find(f => f.chave === 'recuperacao-membros');
+  const syncLinhas = (r.sync || []).map(x => `<tr><td>${trackDot(x.trilha)}${trackLabel(x.trilha)}</td><td>${fmtData(x.sincronizado_em)}</td><td>${x.total ?? 0}</td><td>${x.erro ? `<span class="badge erro">erro</span> ${x.erro}` : '<span class="badge sucesso">ok</span>'}</td></tr>`).join('');
+  const total = (trilha, status) => (r.contagem.find(c => c.trilha === trilha && c.status === status) || {}).total || 0;
+  const linhasTrilha = ['ao-vivo', 'gravado'].map(t => {
+    const soma = r.contagem.filter(c => c.trilha === t).reduce((a, c) => a + c.total, 0);
+    return `<tr><td>${trackDot(t)}${trackLabel(t)}</td><td>${soma}</td><td>${total(t, 'no_grupo')}</td><td>${total(t, 'novo')}</td><td>${total(t, 'enviado')}</td><td>${total(t, 'falha') + total(t, 'sem_whatsapp')}</td></tr>`;
+  }).join('');
+  const forms = state.recuperacaoForms.map(f => `<tr>
+    <td>${f.form_id}</td><td>${f.nome || '—'}</td><td>${trackDot(f.trilha)}${trackLabel(f.trilha)}</td>
+    <td><button class="small danger" data-remover-form="${f.form_id}">Remover</button></td></tr>`).join('');
+  const recentes = r.recentes.map(l => `<tr>
+    <td>${fmtData(l.criado_meta_em)}</td><td>${trackLabel(l.trilha)}</td><td>${l.nome || '—'}</td><td>${l.telefone || '—'}</td>
+    <td>${badgeLead(l.status)}${l.erro ? `<div class="muted" style="margin-top:3px">${l.erro}</div>` : ''}</td></tr>`).join('');
+  const ok = (v) => v ? '<span class="badge sucesso">configurado</span>' : '<span class="badge erro">faltando</span>';
+  return `
+    <div class="page-header">
+      <div><h1 class="page-title">Recuperação de leads</h1>
+      <div class="page-sub">Quem preencheu o formulário do Meta e não entrou no grupo recebe um template oficial do WhatsApp. Nasce pausado e em modo simulação.</div></div>
+    </div>
+    <div class="card"><div class="card-title">Credenciais (variáveis de ambiente no servidor)</div>
+      <div class="muted" style="margin-top:6px">Envio de template (META_WA_TOKEN + META_WA_PHONE_NUMBER_ID): ${ok(r.credenciais.cloudApi)}<br>Leitura de leads (META_LEADS_TOKEN ou META_WA_TOKEN): ${ok(r.credenciais.leads)}</div></div>
+    ${fluxoSync ? renderCardFluxo(fluxoSync) : ''}
+    <div class="card"><div class="card-title">Membros dos grupos (sincronização com a Evolution)</div>
+      <table class="bf-table"><thead><tr><th>Trilha</th><th>Última sincronização completa</th><th>Membros</th><th>Situação</th></tr></thead><tbody>${syncLinhas || '<tr><td colspan="4" class="muted">Ainda não sincronizou.</td></tr>'}</tbody></table></div>
+    ${fluxo ? renderCardFluxo(fluxo) : ''}
+    <div class="card"><div class="card-title">Resumo por trilha</div>
+      <table class="bf-table"><thead><tr><th>Trilha</th><th>Leads</th><th>Já no grupo</th><th>Aguardando</th><th>Enviados</th><th>Falhas</th></tr></thead><tbody>${linhasTrilha}</tbody></table></div>
+    <div class="card"><div class="card-title">Formulários do Meta → trilha</div>
+      <table class="bf-table"><thead><tr><th>ID do formulário</th><th>Nome</th><th>Trilha</th><th></th></tr></thead><tbody>${forms || '<tr><td colspan="4" class="muted">Nenhum formulário cadastrado.</td></tr>'}</tbody></table>
+      <form id="form-recuperacao-form" style="margin-top:12px">
+        <div><label>ID do formulário (Meta)</label><input type="text" id="rec-form-id" required /></div>
+        <div><label>Nome (referência)</label><input type="text" id="rec-form-nome" /></div>
+        <div><label>Trilha</label><select id="rec-form-trilha"><option value="ao-vivo">Ao Vivo</option><option value="gravado">Gravado</option></select></div>
+        <div class="actions"><button type="submit">Salvar formulário</button></div>
+      </form></div>
+    <div class="card"><div class="card-title">Últimos leads (telefone mascarado)</div>
+      <div style="overflow-x:auto"><table class="bf-table"><thead><tr><th>Cadastro</th><th>Trilha</th><th>Nome</th><th>Telefone</th><th>Status</th></tr></thead><tbody>${recentes || '<tr><td colspan="5" class="muted">Nenhum lead ainda.</td></tr>'}</tbody></table></div></div>
+  `;
+}
+
 function render() {
   document.querySelectorAll('.navitem').forEach(el => el.classList.toggle('active', el.dataset.view === state.view));
   const main = document.getElementById('main');
   if (state.view === 'overview') main.innerHTML = renderOverview();
   else if (state.view === 'fluxos') main.innerHTML = renderFluxos();
   else if (state.view === 'grupos') main.innerHTML = renderGrupos();
+  else if (state.view === 'recuperacao') main.innerHTML = renderRecuperacao();
   else if (state.view === 'black-friday') main.innerHTML = renderBlackFriday();
   else if (state.view === 'editar') main.innerHTML = renderEditar();
   else if (state.view === 'config') main.innerHTML = renderConfig();
@@ -714,6 +780,31 @@ function render() {
 }
 
 function attachHandlers() {
+  const formRecForm = document.getElementById('form-recuperacao-form');
+  if (formRecForm) {
+    formRecForm.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const formId = document.getElementById('rec-form-id').value.trim();
+      if (!formId) return;
+      try {
+        await api(`/api/recuperacao/forms/${encodeURIComponent(formId)}`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ trilha: document.getElementById('rec-form-trilha').value, nome: document.getElementById('rec-form-nome').value.trim() || null }),
+        });
+        await carregarTudo(); render();
+      } catch (e) { alert(`Erro ao salvar formulário: ${e.message}`); }
+    });
+  }
+  document.querySelectorAll('[data-remover-form]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Remover esse formulário do mapeamento? Os leads já puxados continuam no histórico.')) return;
+      try {
+        await api(`/api/recuperacao/forms/${encodeURIComponent(btn.dataset.removerForm)}`, { method: 'DELETE' });
+        await carregarTudo(); render();
+      } catch (e) { alert(`Erro: ${e.message}`); }
+    });
+  });
+
   document.querySelectorAll('[data-set-trilha]').forEach(btn => {
     btn.addEventListener('click', () => {
       state[btn.dataset.setTrilha] = btn.dataset.trilhaValor;
