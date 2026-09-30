@@ -322,7 +322,8 @@ app.get("/r/ao-vivo-2", (_req, res) => {
 // Link fixo de oferta — sempre aponta pro mesmo destino externo (ex: checkout
 // de pagamento). Diferente das rotas /r/ao-vivo-*, não depende de grupo
 // vigente nem tem modo neutro: é um redirect simples e estável.
-app.get("/r/oferta", (_req, res) => {
+// Sem prefixo /r/ pra ficar mais fácil de digitar (link.carreiraglobal.net/oferta).
+app.get("/oferta", (_req, res) => {
   res.redirect(302, "https://pay.hub.la/GBfcN2KLEd37dfHXG6Jx");
 });
 
