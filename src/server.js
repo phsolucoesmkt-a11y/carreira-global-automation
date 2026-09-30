@@ -108,6 +108,16 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(express.json());
 
+// Dominio oferta.carreiraglobal.net e so um atalho de digitacao pro link fixo
+// de oferta — nao mexe em nada do link.carreiraglobal.net (outro host, outras
+// rotas). Qualquer caminho nesse dominio cai direto no checkout.
+app.use((req, res, next) => {
+  if (req.hostname === "oferta.carreiraglobal.net") {
+    return res.redirect(302, "https://pay.hub.la/GBfcN2KLEd37dfHXG6Jx");
+  }
+  next();
+});
+
 const PORT = Number(process.env.PORT || 3100);
 const USER = process.env.BASIC_AUTH_USER;
 const PASSWORD = process.env.BASIC_AUTH_PASSWORD;
