@@ -122,7 +122,7 @@ const PORT = Number(process.env.PORT || 3100);
 const USER = process.env.BASIC_AUTH_USER;
 const PASSWORD = process.env.BASIC_AUTH_PASSWORD;
 const COOKIE_NAME = "cga_session";
-const LINK_GRUPO_BLACK_FRIDAY_PADRAO = "https://chat.whatsapp.com/Fv8f4LCdL7K2dArmLuNlyG?mode=gi_t";
+const LINK_GRUPO_BLACK_FRIDAY_VITALICIA_PADRAO = "https://chat.whatsapp.com/Fv8f4LCdL7K2dArmLuNlyG?mode=gi_t";
 
 // Registro central de todos os fluxos automatizados: chave (usada na URL),
 // nome pra mostrar, horário padrão (usado se ninguém editou ainda) e a
@@ -338,18 +338,19 @@ app.get("/oferta", (_req, res) => {
   res.redirect(302, "https://pay.hub.la/GBfcN2KLEd37dfHXG6Jx");
 });
 
-// Link de grupo da campanha Black Friday — mesmo padrão neutro/grupo das
-// rotas /r/ao-vivo-*, mas o link do grupo é fixo (editável pelo painel),
-// não vem de um sistema de "grupo vigente" com rotação automática.
-app.get("/r/black-friday", (_req, res) => {
-  if (lerConfiguracao("redirect_black_friday_modo", "grupo") === "neutro") {
+// Link de grupo da campanha Black Friday Vitalícia — mesmo padrão
+// neutro/grupo das rotas /r/ao-vivo-*, mas o link do grupo é fixo
+// (editável pelo painel), não vem de um sistema de "grupo vigente" com
+// rotação automática.
+app.get("/r/black-friday-vitalicia", (_req, res) => {
+  if (lerConfiguracao("redirect_black_friday_vitalicia_modo", "grupo") === "neutro") {
     res.set("Content-Type", "text/html; charset=utf-8").send(paginaNeutraDeAds());
     return;
   }
-  const link = lerConfiguracao("link_grupo_black_friday", LINK_GRUPO_BLACK_FRIDAY_PADRAO);
+  const link = lerConfiguracao("link_grupo_black_friday_vitalicia", LINK_GRUPO_BLACK_FRIDAY_VITALICIA_PADRAO);
   if (!link) {
-    console.error("[redirect] /r/black-friday sem link de grupo configurado — não deu pra redirecionar");
-    res.status(503).send("Estamos preparando o grupo da Black Friday. Tente novamente em alguns minutos.");
+    console.error("[redirect] /r/black-friday-vitalicia sem link de grupo configurado — não deu pra redirecionar");
+    res.status(503).send("Estamos preparando o grupo da Black Friday Vitalícia. Tente novamente em alguns minutos.");
     return;
   }
   res.redirect(302, link);
@@ -555,15 +556,15 @@ app.put("/api/config/link-da-live", (req, res) => {
   res.json({ ok: true });
 });
 
-// Link do grupo da Black Friday usado pela rota /r/black-friday.
-app.get("/api/config/link-grupo-black-friday", (_req, res) => {
-  res.json({ link: lerConfiguracao("link_grupo_black_friday", LINK_GRUPO_BLACK_FRIDAY_PADRAO) });
+// Link do grupo da Black Friday Vitalícia usado pela rota /r/black-friday-vitalicia.
+app.get("/api/config/link-grupo-black-friday-vitalicia", (_req, res) => {
+  res.json({ link: lerConfiguracao("link_grupo_black_friday_vitalicia", LINK_GRUPO_BLACK_FRIDAY_VITALICIA_PADRAO) });
 });
 
-app.put("/api/config/link-grupo-black-friday", (req, res) => {
+app.put("/api/config/link-grupo-black-friday-vitalicia", (req, res) => {
   const { link } = req.body ?? {};
   if (!link) return res.status(400).json({ error: "Campo 'link' é obrigatório." });
-  definirConfiguracao("link_grupo_black_friday", link);
+  definirConfiguracao("link_grupo_black_friday_vitalicia", link);
   res.json({ ok: true });
 });
 
@@ -663,28 +664,28 @@ app.put("/api/config/link-ao-vivo", (req, res) => {
   res.json({ ok: true });
 });
 
-// Modo dos links de redirect (/r/ao-vivo, /r/ao-vivo-2 e /r/black-friday)
-// usados no tráfego pago — "grupo" (padrão) redireciona pro grupo de
-// verdade, "neutro" serve uma página comum, pra passar pela verificação de
-// link do Meta Ads antes de trocar de volta.
+// Modo dos links de redirect (/r/ao-vivo, /r/ao-vivo-2 e
+// /r/black-friday-vitalicia) usados no tráfego pago — "grupo" (padrão)
+// redireciona pro grupo de verdade, "neutro" serve uma página comum, pra
+// passar pela verificação de link do Meta Ads antes de trocar de volta.
 const ROTAS_REDIRECT_MODO = {
   "ao-vivo": "redirect_ao_vivo_modo",
   "ao-vivo-2": "redirect_ao_vivo_2_modo",
-  "black-friday": "redirect_black_friday_modo",
+  "black-friday-vitalicia": "redirect_black_friday_vitalicia_modo",
 };
 
 app.get("/api/config/redirect-modo", (_req, res) => {
   res.json({
     aoVivo: lerConfiguracao("redirect_ao_vivo_modo", "grupo"),
     aoVivo2: lerConfiguracao("redirect_ao_vivo_2_modo", "grupo"),
-    blackFriday: lerConfiguracao("redirect_black_friday_modo", "grupo"),
+    blackFridayVitalicia: lerConfiguracao("redirect_black_friday_vitalicia_modo", "grupo"),
   });
 });
 
 app.put("/api/config/redirect-modo", (req, res) => {
   const { rota, modo } = req.body ?? {};
   if (!Object.keys(ROTAS_REDIRECT_MODO).includes(rota)) {
-    return res.status(400).json({ error: "Campo 'rota' precisa ser 'ao-vivo', 'ao-vivo-2' ou 'black-friday'." });
+    return res.status(400).json({ error: "Campo 'rota' precisa ser 'ao-vivo', 'ao-vivo-2' ou 'black-friday-vitalicia'." });
   }
   if (!["grupo", "neutro"].includes(modo)) {
     return res.status(400).json({ error: "Campo 'modo' precisa ser 'grupo' ou 'neutro'." });
