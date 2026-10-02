@@ -270,7 +270,7 @@ async function checarStatus() {
 }
 
 async function carregarTudo() {
-  const [fluxosRes, gruposRes, modeloRes, meRes, linkRes, replayRes, linkAoVivoRes, gruposAoVivoRes, modeloAoVivoRes, redirectModoRes, blackFridayRes, linkGrupoBlackFridayRes, live1ModoRes, recForms, recResumo] = await Promise.all([
+  const [fluxosRes, gruposRes, modeloRes, meRes, linkRes, replayRes, linkAoVivoRes, gruposAoVivoRes, modeloAoVivoRes, redirectModoRes, blackFridayRes, linkGrupoBlackFridayVitaliciaRes, live1ModoRes, recForms, recResumo] = await Promise.all([
     api('/api/fluxos'),
     api('/api/arvore-grupos'),
     api('/api/grupo-modelo'),
@@ -282,7 +282,7 @@ async function carregarTudo() {
     api('/api/grupo-modelo-ao-vivo'),
     api('/api/config/redirect-modo'),
     api('/api/grupos-black-friday'),
-    api('/api/config/link-grupo-black-friday'),
+    api('/api/config/link-grupo-black-friday-vitalicia'),
     api('/api/config/live1-modo'),
     api('/api/recuperacao/forms'),
     api('/api/recuperacao/resumo'),
@@ -296,10 +296,10 @@ async function carregarTudo() {
   state.linkAoVivo = linkAoVivoRes.link;
   state.gruposAoVivo = gruposAoVivoRes.grupos;
   state.modeloAoVivo = modeloAoVivoRes.modelo;
-  state.redirectModo = { aoVivo: redirectModoRes.aoVivo, aoVivo2: redirectModoRes.aoVivo2, blackFriday: redirectModoRes.blackFriday };
+  state.redirectModo = { aoVivo: redirectModoRes.aoVivo, aoVivo2: redirectModoRes.aoVivo2, blackFridayVitalicia: redirectModoRes.blackFridayVitalicia };
   state.gruposBlackFriday = blackFridayRes.grupos;
   state.resumoBlackFriday = blackFridayRes.resumo;
-  state.linkGrupoBlackFriday = linkGrupoBlackFridayRes.link;
+  state.linkGrupoBlackFridayVitalicia = linkGrupoBlackFridayVitaliciaRes.link;
   state.live1Modo = live1ModoRes.modo;
   state.recuperacaoForms = recForms.forms;
   state.recuperacaoResumo = recResumo;
@@ -495,17 +495,17 @@ function renderConfig() {
       ${renderRedirectModoRow('ao-vivo-2', 'Gravado (/r/ao-vivo-2)', state.redirectModo?.aoVivo2)}
     </div>
     <div class="card">
-      <label>Link de grupo — Black Friday (/r/black-friday)</label>
+      <label>Link de grupo — Black Friday Vitalícia (/r/black-friday-vitalicia)</label>
       <div class="muted" style="margin-bottom:12px">
         Mesmo esquema das rotas acima: em "Grupo real" redireciona pro link do grupo abaixo; em "Página neutra" serve
         uma página comum, pra passar pela verificação do Meta Ads.
       </div>
-      <form id="form-link-black-friday" class="row top">
-        <input type="text" id="f-link-black-friday" value="${state.linkGrupoBlackFriday || ''}" />
+      <form id="form-link-black-friday-vitalicia" class="row top">
+        <input type="text" id="f-link-black-friday-vitalicia" value="${state.linkGrupoBlackFridayVitalicia || ''}" />
         <div><button class="btn-live" type="submit">Salvar</button></div>
       </form>
-      <div id="link-black-friday-salvo-msg" class="muted" style="margin-top:8px"></div>
-      ${renderRedirectModoRow('black-friday', 'Black Friday (/r/black-friday)', state.redirectModo?.blackFriday)}
+      <div id="link-black-friday-vitalicia-salvo-msg" class="muted" style="margin-top:8px"></div>
+      ${renderRedirectModoRow('black-friday-vitalicia', 'Black Friday Vitalícia (/r/black-friday-vitalicia)', state.redirectModo?.blackFridayVitalicia)}
     </div>
     <div class="card track-live1">
       <label>${trackDot('live1')}Modo da campanha Live 1 (grupos antigos)</label>
@@ -1087,18 +1087,18 @@ function attachHandlers() {
     });
   }
 
-  const formLinkBlackFriday = document.getElementById('form-link-black-friday');
-  if (formLinkBlackFriday) {
-    formLinkBlackFriday.addEventListener('submit', async (e) => {
+  const formLinkBlackFridayVitalicia = document.getElementById('form-link-black-friday-vitalicia');
+  if (formLinkBlackFridayVitalicia) {
+    formLinkBlackFridayVitalicia.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const link = document.getElementById('f-link-black-friday').value.trim();
-      await api('/api/config/link-grupo-black-friday', {
+      const link = document.getElementById('f-link-black-friday-vitalicia').value.trim();
+      await api('/api/config/link-grupo-black-friday-vitalicia', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ link }),
       });
-      state.linkGrupoBlackFriday = link;
-      document.getElementById('link-black-friday-salvo-msg').textContent = 'Salvo ✓';
+      state.linkGrupoBlackFridayVitalicia = link;
+      document.getElementById('link-black-friday-vitalicia-salvo-msg').textContent = 'Salvo ✓';
     });
   }
 
